@@ -1,0 +1,13 @@
+@layer components {
+  .transition-color-300 {
+    @apply transition-colors duration-300 ease-in-out;
+  }
+
+  .transition-all-300 {
+    @apply transition-all duration-300 ease-in-out;
+  }
+
+  .transition-transform-300 {
+    @apply transition-transform duration-300 ease-in-out;
+  }
+}

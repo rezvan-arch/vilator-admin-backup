@@ -1,0 +1,276 @@
+.card {
+  box-shadow: 0 2px 18px 1px rgb(49 53 72 / 10%);
+  @apply bg-white rounded-md mb-5;
+
+  .card__header {
+    @apply flex items-center justify-between p-6 pb-4;
+
+    .heading__title {
+      @apply text-lg text-[#464855] font-medium;
+    }
+
+    .heading__actions {
+      @apply flex items-center gap-2;
+
+      .btn-primary,
+      .btn-danger {
+        @apply py-[6px] px-2 text-sm;
+      }
+    }
+  }
+
+  .card__body {
+    @apply p-6 pb-4;
+
+    &.table {
+      @apply overflow-auto block;
+    }
+
+    table {
+      @apply w-full text-[#6B6F82]  text-sm;
+
+      a {
+        @apply text-[#1E9FF2];
+      }
+
+      th,
+      td {
+        @apply text-right border-t border-b-2 border-[#E3EBF3] py-3 px-4 whitespace-nowrap;
+      }
+
+      td {
+        @apply border-b border-t-0;
+
+        .verify {
+          @apply rounded-md py-[0.35rem] px-[0.4rem] text-center;
+        }
+
+        .n_verify {
+          @apply rounded-md text-[#FF4961] py-[0.35rem] px-[0.4rem] text-center;
+        }
+
+        &.c_ellipsis {
+          @apply max-w-[200px] overflow-hidden text-ellipsis whitespace-nowrap;
+        }
+      }
+
+      tbody tr:nth-of-type(odd) {
+        background-color: rgba(245, 247, 250, 0.5);
+      }
+
+      .actions {
+        @apply flex items-center gap-2;
+
+        a,
+        button {
+          @apply text-base p-1;
+        }
+
+        .edit__action {
+          @apply text-[#666EE8] hover:text-[#232FDE];
+        }
+        .see__action {
+          @apply text-[#6B6F82] hover:text-[#484B58];
+        }
+        .delete__action {
+          @apply text-[#FF4961];
+        }
+        .notification__action {
+          @apply text-[#FF9149] hover:text-[#FC6300];
+        }
+      }
+
+      input[type="checkbox"] {
+        @apply w-4 h-4 cursor-pointer;
+      }
+
+      .setting {
+        @apply w-0;
+        a,
+        button {
+          @apply w-7;
+        }
+      }
+    }
+
+    .empty__list {
+      @apply border-b border-t py-5;
+
+      p {
+        @apply text-base text-center text-[#464855];
+      }
+    }
+  }
+}
+
+.btn {
+  transition: color 0.15s ease-in-out, background-color 0.15s ease-in-out,
+    border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+
+  @apply inline-flex items-center justify-center gap-2 h-[46px] whitespace-nowrap font-normal text-base leading-5 text-[#6b6f82] text-center align-middle select-none bg-transparent border border-transparent py-3 px-4 rounded-[4px];
+}
+
+.btn-primary {
+  @apply bg-[#666EE8] text-white;
+}
+
+.btn-elevated {
+  @apply bg-[#ecf0f1] text-[#000];
+}
+
+.btn-danger {
+  @apply bg-[#FF4961] text-white;
+}
+
+.btn-warning {
+  @apply bg-[#FF9149] text-white;
+}
+
+.btn-success {
+  @apply bg-[#28D094] text-white;
+}
+
+.btn-outline-danger {
+  border-color: #ff4961;
+  background-color: transparent;
+  color: #ff4961;
+
+  &:hover {
+    background-color: #ff4961;
+    color: #ffffff !important;
+  }
+}
+
+.btn-outline-primary {
+  border-color: #666ee8;
+  background-color: transparent;
+  color: #666ee8;
+
+  &:hover {
+    background-color: #666ee8;
+    color: #ffffff !important;
+  }
+}
+
+.badge {
+  transition: color 0.15s ease-in-out, background-color 0.15s ease-in-out,
+    border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+  @apply inline-block py-[0.35rem] px-[0.4rem] text-[80%] font-bold leading-4 text-center whitespace-nowrap align-baseline rounded-[4px];
+}
+
+.badge-pill {
+  @apply px-[0.6rem] rounded-full;
+}
+
+.badge-primary {
+  @apply text-white bg-[#666ee8];
+}
+.badge-success {
+  @apply text-white bg-[#28D094];
+}
+.badge-danger {
+  @apply text-white bg-[#FF4961];
+}
+.badge-warning {
+  @apply text-white bg-[#FF9149];
+}
+
+select {
+  @apply bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-1/4 p-2.5 outline-none cursor-pointer;
+
+  option {
+    @apply cursor-pointer;
+  }
+}
+
+.row {
+  @apply flex mb-5 last:mb-0 gap-2;
+}
+
+.controls {
+  @apply px-0 inline-block;
+
+  label {
+    @apply text-sm text-[#2B335E] mb-2 block;
+  }
+}
+
+.form-control {
+  transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+  @apply block w-full h-[calc(1.25em+1rem+10px)] py-3 px-2 text-base font-normal leading-5 text-[#4e5154] bg-white bg-clip-padding border border-[#babfc7] rounded-[4px];
+}
+
+.form-control:focus {
+  @apply text-[#4e5154] bg-white border-[#1e9ff2] outline-none shadow-none;
+}
+
+.form-control[readonly] {
+  background-color: #f8f8f8;
+}
+
+.form-control[disabled] {
+  background-color: #f8f8f8;
+}
+
+.form-textarea {
+  @apply h-auto resize-none;
+}
+
+// ALIFP
+.admin__pagination {
+  margin-top: 2rem;
+  display: flex;
+  justify-content: center;
+
+  ul {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+
+    li {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      width: 2rem;
+      height: 2rem;
+      background-color: #eeeeee;
+      border-radius: 50%;
+      cursor: pointer;
+
+      &.disabled {
+        cursor: inherit;
+      }
+
+      &.active {
+        background-color: #666ee8;
+        color: #fff;
+      }
+    }
+  }
+}
+
+.vpd-input-group input {
+  @apply border-[#babfc7];
+}
+
+.v-select {
+  @apply bg-white;
+
+  &.error {
+    .vs__selected {
+      color: #ff4961 !important;
+    }
+
+    .vs__dropdown-toggle,
+    ul {
+      border-color: #ff4961 !important;
+    }
+  }
+
+  ul {
+    @apply overflow-x-hidden;
+    li {
+      text-wrap: wrap !important;
+    }
+  }
+}

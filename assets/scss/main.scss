@@ -1,0 +1,256 @@
+@forward "./global/fonts.scss";
+@forward "./panel/property.scss";
+@forward "vue-select/dist/vue-select.css";
+@forward "leaflet/dist/leaflet.css";
+
+* {
+  font-family: Yekan Bakh FaNum;
+  direction: rtl;
+  scroll-behavior: smooth;
+}
+
+body {
+  @apply bg-[#fbfbfb] dark:bg-[#141416] scroll-smooth;
+}
+
+/* Chrome, Safari, Edge, Opera */
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* Firefox */
+input[type="number"],
+input[type="text"].c-number {
+  -moz-appearance: textfield;
+  direction: ltr;
+  @apply placeholder:text-right text-left;
+}
+
+.swiper-button-disabled {
+  transform: scale(0);
+}
+
+.container {
+  @apply px-[10px] md:px-5;
+}
+
+:root {
+  --map-tiles-filter: grayscale(100%) invert(100%);
+}
+
+html.dark {
+  .leaflet-layer {
+    filter: var(--map-tiles-filter, none);
+  }
+}
+
+.fade-enter-active,
+.fade-leave-active {
+  transition: all 0.3s;
+}
+
+.fade-enter,
+.fade-leave-to,
+.fade-enter-from {
+  opacity: 0;
+}
+
+.translate-enter-active,
+.translate-leave-active {
+  transition: all 0.3s;
+}
+
+.translate-enter,
+.translate-leave-to,
+.translate-enter-from {
+  opacity: 0;
+  transform: translateY(30px);
+}
+
+.swiper-pagination-bullet {
+  background: white !important;
+  opacity: 0.4 !important;
+}
+
+.swiper-pagination-bullet-active {
+  opacity: 100 !important;
+}
+
+.lux__section,
+.licenses {
+  .swiper-pagination-bullet {
+    background-color: #41aac8 !important;
+  }
+}
+
+.v-select {
+  .vs__dropdown-toggle {
+    @apply min-h-[46px] py-1;
+  }
+
+  .vs__selected-options {
+    @apply gap-2;
+  }
+
+  ul {
+    @apply border-[#1e9ff2];
+    li {
+      text-align: right !important;
+    }
+  }
+
+  &.vs--open .vs__dropdown-toggle {
+    @apply border-[#1e9ff2];
+  }
+
+  .vs__actions {
+    @apply ml-[5px] gap-[6px] pt-0;
+  }
+  .vs__selected {
+    @apply gap-2 mt-0;
+  }
+  .vs__search {
+    @apply mt-0;
+  }
+
+  &.modal {
+    @apply bg-white min-w-[50%] h-[38px];
+
+    .vs__dropdown-toggle {
+      @apply min-h-[38px] py-0;
+    }
+  }
+
+  .vs__dropdown-option--selected {
+    background: #1e9ff2 !important;
+    color: #fff !important;
+  }
+}
+
+.ck-content,
+.ck-source-editing-area {
+  @apply min-h-[150px];
+
+  ul {
+    list-style-type: disc;
+    margin: revert;
+    padding: revert;
+
+    ul {
+      list-style-type: disc;
+
+      ul {
+        list-style-type: square;
+
+        ul {
+          list-style-type: square;
+        }
+      }
+    }
+  }
+
+  ol {
+    list-style-type: decimal;
+    margin: revert;
+    padding: revert;
+
+    ol {
+      list-style-type: lower-latin;
+
+      ol {
+        list-style-type: lower-roman;
+
+        ol {
+          list-style-type: upper-latin;
+
+          ol {
+            list-style-type: upper-roman;
+          }
+        }
+      }
+    }
+  }
+
+  h2 {
+    @apply text-[26px];
+  }
+  h3 {
+    @apply text-[22px];
+  }
+  h4 {
+    @apply text-[20px];
+  }
+}
+
+.vpd-icon-btn {
+  margin-bottom: 0 !important;
+  display: flex !important;
+}
+
+.vpd-time-column.vpd-time-m .vpd-counter.direction-next,
+.vpd-time-column.vpd-time-m .vpd-counter.direction-prev {
+  @apply mr-auto;
+}
+
+.swiper-wrapper {
+  display: flex;
+  align-items: center;
+}
+
+.swiper-lazy-preloader {
+  width: 100% !important;
+  height: 100% !important;
+  left: 20px !important;
+  top: 20px !important;
+  border: none !important;
+  border-radius: 0 !important;
+  @apply bg-slate-200 dark:bg-[#353945] animate-basePulse z-0;
+}
+
+.swiper:not(.swiper-watch-progress) .swiper-lazy-preloader {
+  animation: none !important;
+}
+.swiper img.swiper-lazy:not(.swiper-lazy-loaded) {
+  opacity: 0 !important;
+}
+
+.swiper {
+  position: relative !important;
+}
+
+.swiper-thumbs .swiper-wrapper {
+  display: flex !important;
+
+  .swiper-slide {
+    @apply w-1/5 ml-[10px];
+  }
+}
+
+.swiper-watch-progress .swiper-slide-visible .swiper-lazy-preloader,
+.swiper:not(.swiper-watch-progress) .swiper-lazy-preloader {
+  animation: basePulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite !important;
+}
+
+.filter__box {
+  @apply pb-0;
+  .collapse__header {
+    @apply cursor-pointer;
+    .collapse__icon {
+      @apply transition-transform duration-700;
+
+      &.rotate {
+        @apply rotate-180;
+      }
+    }
+  }
+  .collapse__body {
+    padding: 0 1.5rem !important;
+    @apply max-h-0 overflow-hidden transition-all duration-700 opacity-0;
+
+    &.showFilter {
+      padding: 1rem 1.5rem !important;
+    }
+  }
+}

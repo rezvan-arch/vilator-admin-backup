@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="50px" height="52px" viewBox="0 0 50 52" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <title>Shape</title>
+    <defs>
+        <filter x="-114.9%" y="-110.6%" width="329.8%" height="329.8%" filterUnits="objectBoundingBox" id="filter-1">
+            <feOffset dx="0" dy="8" in="SourceAlpha" result="shadowOffsetOuter1"></feOffset>
+            <feGaussianBlur stdDeviation="9" in="shadowOffsetOuter1" result="shadowBlurOuter1"></feGaussianBlur>
+            <feColorMatrix values="0 0 0 0 0   0 0 0 0 0   0 0 0 0 0  0 0 0 0.0500000007 0" type="matrix" in="shadowBlurOuter1" result="shadowMatrixOuter1"></feColorMatrix>
+            <feMerge>
+                <feMergeNode in="shadowMatrixOuter1"></feMergeNode>
+                <feMergeNode in="SourceGraphic"></feMergeNode>
+            </feMerge>
+        </filter>
+    </defs>
+    <g id="Page-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="Vilator-Light" transform="translate(-1197.000000, -830.000000)" fill="#000000" fill-rule="nonzero">
+            <g id="🌕Categury" transform="translate(138.000000, 583.000000)">
+                <g id="Group-23" transform="translate(904.000000, 65.000000)">
+                    <g id="icon-area" filter="url(#filter-1)" transform="translate(157.000000, 176.000000)">
+                        <g id="file-copy-2-line" transform="translate(9.000000, 10.000000)">
+                            <path d="M9.90277778,8.94444444 L9.90277778,6.54861111 C9.90277778,6.10755037 10.2603282,5.75 10.7013889,5.75 L20.2847222,5.75 C20.725783,5.75 21.0833333,6.10755037 21.0833333,6.54861111 L21.0833333,17.7291667 C21.0833333,18.1702274 20.725783,18.5277778 20.2847222,18.5277778 L17.8888889,18.5277778 L17.8888889,20.9236111 C17.8888889,21.3644444 17.5295139,21.7222366 17.0846875,21.7222366 L7.51253472,21.7222366 C7.29982742,21.7234973 7.09538276,21.639947 6.9444496,21.490063 C6.79351644,21.340179 6.70854201,21.1363221 6.70833333,20.9236111 L6.71072917,9.74305556 C6.71072917,9.30222222 7.07010417,8.94444444 7.51413194,8.94444444 L9.90277778,8.94444444 Z M8.30715278,10.5416667 L8.30555556,20.125 L16.2916667,20.125 L16.2916667,10.5416667 L8.30715278,10.5416667 Z M11.5,8.94444444 L17.8888889,8.94444444 L17.8888889,16.9305556 L19.4861111,16.9305556 L19.4861111,7.34722222 L11.5,7.34722222 L11.5,8.94444444 Z M9.90277778,12.9375 L14.6944444,12.9375 L14.6944444,14.5347222 L9.90277778,14.5347222 L9.90277778,12.9375 Z M9.90277778,16.1319444 L14.6944444,16.1319444 L14.6944444,17.7291667 L9.90277778,17.7291667 L9.90277778,16.1319444 Z" id="Shape"></path>
+                        </g>
+                    </g>
+                </g>
+            </g>
+        </g>
+    </g>
+</svg>
