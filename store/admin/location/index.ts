@@ -80,6 +80,7 @@ export const locationStore = defineStore({
             "search[title]": search,
             "search[type]": type,
             "search[parent_id][]": parent_id,
+            per_page: 2000,
             "relations[]": ["relatedLocation"],
             ...parentObj,
             // per_page: 1
@@ -100,6 +101,7 @@ export const locationStore = defineStore({
           params: {
             "search[title]": search,
             "search[related_location][]": parent_id,
+            per_page: 2000,
             "relations[]": ["relatedLocation"],
             // per_page: 1
           },
@@ -112,6 +114,25 @@ export const locationStore = defineStore({
           }
           return res;
         });
+    },
+    // جلسه ۱۷: بارگذاری تجمیعی گزینه‌های لوکیشن — همه‌ی فرزندان parentIds در یک رکوئست
+    // (جایگزین آبشار قبلی که به‌ازای هر سطح لوکیشن، رکوئست جدا می‌زد)
+    async getLocationsTree(parentIds: string[]) {
+      return await this.$axios.get(`/api/location`, {
+        params: {
+          "search[parent_id][]": parentIds,
+          per_page: 2000,
+        },
+      });
+    },
+    // جلسه ۱۷: تجمیع بزرگراه‌های مرتبط با همه‌ی لوکیشن‌های انتخاب‌شده در یک رکوئست
+    async getHighwaysTree(relatedIds: string[]) {
+      return await this.$axios.get(`/api/location/highway/list`, {
+        params: {
+          "search[related_location][]": relatedIds,
+          per_page: 2000,
+        },
+      });
     },
     async getTrashedLocations(pageNum: any) {
       this.loading = true;

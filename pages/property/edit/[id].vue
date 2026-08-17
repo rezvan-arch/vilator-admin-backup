@@ -249,7 +249,9 @@ export default {
       },
     ];
 
-    // fetch
+    // fetch — جلسه ۱۷: فقط سمت کلاینت
+    // (قبلاً بدون گارد، در رفرش کامل همه‌ی رکوئست‌ها دوبار اجرا می‌شد: یک‌بار SSR و یک‌بار hydration)
+    if (import.meta.client) {
     propertyStore.getSingleProperty(route.params.id).then(async (res) => {
       if (res.status == "success") {
         if (propertyStore.properties.location) {
@@ -268,9 +270,36 @@ export default {
           propertyStore.properties.property_status = "sell";
         }
 
+        // جلسه ۱۷: بارگذاری گزینه‌های لوکیشن با ۲ رکوئست تجمیعی
+        // (قبلاً به‌ازای هر سطح انتخاب‌شده، رکوئست جداگانه برای همه‌ی سطوح زیرش می‌خورد — ~۴۲ رکوئست)
+        locationStore.selectOptions = {};
+        const selectedLocations = locSlugList
+          .map((item) => propertyStore.properties[item])
+          .filter((loc) => loc != null && loc.id != undefined);
+        if (selectedLocations.length > 0) {
+          locationStore.locationLoading = true;
+          const locationIds = selectedLocations.map((loc) => loc.id);
+          Promise.all([
+            locationStore.getLocationsTree(locationIds).then((res) => {
+              if (res.status == "success") {
+                assignSelectOptions(res.data);
+              }
+            }),
+            locationStore.getHighwaysTree(locationIds).then((res) => {
+              if (res.status == "success") {
+                locationStore.selectOptions["highway"] = res.data;
+              }
+            }),
+          ]).finally(() => {
+            locationStore.locationLoading = false;
+          });
+        }
+
+        // پر کردن اسلاگ‌های دستی آدرس از زنجیره‌ی لوکیشن انتخاب‌شده
         locSlugList.forEach((item) => {
-          if (propertyStore.properties[item] != null) {
-            changeLocation(item, propertyStore.properties[item]);
+          const loc = propertyStore.properties[item];
+          if (loc != null && loc.slug) {
+            addressSlugs[item] = loc.slug;
           }
         });
 
@@ -326,48 +355,57 @@ export default {
             propertyStore.properties.property_owner_price;
         }
 
-        if (
-          propertyStore.properties["country"] == undefined ||
-          propertyStore.properties["country"] == null
-        ) {
-          Object.keys(addressSlugs).forEach((item) => {
-            locationStore.getLocationsSelect("", item).then((res) => {});
-          });
-          locationStore.getHighwaySelect("").then((res) => {});
-        }
+        // (fallback قدیمی «بدون کشور» که ۱۸ رکوئست بیهوده می‌زد حذف شد —
+        // با تجمیع بالا، اگر زنجیره‌ای انتخاب نشده باشد سِلکت‌ها خالی می‌مانند و کشور از رکوئست پایین پر می‌شود)
 
         propertyStore.loading = false;
       }
     });
 
-    userStore.getUserSelect("consultant");
-    userStore.getUserSelect("owner_house");
+      userStore.getUserSelect("consultant");
+      userStore.getUserSelect("owner_house");
 
-    locationStore.getLocationsSelect("", "country").then((res) => {});
+      locationStore.getLocationsSelect("", "country").then((res) => {});
+    }
+
+    // جلسه ۱۷: توزیع فرزندان تجمیع‌شده روی سِلکت‌های نوع‌مختلف
+    // برای هر نوع، عمیق‌ترین لوکیشن انتخاب‌شده‌ای که والدِ معتبرِ آن نوع است، ملاک است
+    function assignSelectOptions(rows) {
+      const byParent = {};
+      rows.forEach((loc) => {
+        if (!byParent[loc.parent_id]) byParent[loc.parent_id] = [];
+        byParent[loc.parent_id].push(loc);
+      });
+
+      locSlugList.forEach((type) => {
+        const locType = locationTypeOptions.find((t) => t.value === type);
+        if (!locType) return;
+        // کشور والد ندارد — گزینه‌هایش از رکوئست جداگانه پر می‌شود
+        if (locType.validParent.length === 0) return;
+
+        let active = null;
+        locSlugList.forEach((parentType) => {
+          if (
+            locType.validParent.includes(parentType) &&
+            propertyStore.properties[parentType] &&
+            propertyStore.properties[parentType].id != undefined
+          ) {
+            active = propertyStore.properties[parentType];
+          }
+        });
+
+        if (active && byParent[active.id]) {
+          locationStore.selectOptions[type] = byParent[active.id].filter(
+            (loc) => loc.type === type
+          );
+        } else {
+          locationStore.selectOptions[type] = [];
+        }
+      });
+    }
 
     function changeLocation(locSlug, data) {
       if (!data) return;
-      if (locSlug !== "suburb" && locSlug !== "complex") {
-        locationStore.locationLoading = true;
-
-        locSlugList.slice(locSlugList.indexOf(locSlug) + 1).forEach((item) => {
-          if (item == "highway") {
-            locationStore.getHighwaySelect("", data.id).then((res) => {
-              locationStore.locationLoading = false;
-            });
-          } else {
-            locationTypeOptions.forEach((locType) => {
-              if (
-                locType.value == item &&
-                locType.validParent.includes(data.type)
-              ) {
-                locationStore.getLocationsSelect("", item, data.id);
-              }
-            });
-            locationStore.locationLoading = false;
-          }
-        });
-      }
 
       if (propertyStore.properties[locSlug]) {
         addressSlugs[locSlug] = propertyStore.properties[locSlug].slug;
@@ -382,6 +420,30 @@ export default {
               addressSlugs[item.type] = item.slug;
             }
           });
+        }
+      }
+
+      if (locSlug !== "suburb" && locSlug !== "complex") {
+        locationStore.locationLoading = true;
+
+        // جلسه ۱۷: به‌جای رکوئست جدا برای هر سطح زیرین، فرزندان همان انتخاب در ۲ رکوئست
+        if (data.id != undefined) {
+          Promise.all([
+            locationStore.getLocationsTree([data.id]).then((res) => {
+              if (res.status == "success") {
+                assignSelectOptions(res.data);
+              }
+            }),
+            locationStore.getHighwaysTree([data.id]).then((res) => {
+              if (res.status == "success") {
+                locationStore.selectOptions["highway"] = res.data;
+              }
+            }),
+          ]).finally(() => {
+            locationStore.locationLoading = false;
+          });
+        } else {
+          locationStore.locationLoading = false;
         }
       }
     }
