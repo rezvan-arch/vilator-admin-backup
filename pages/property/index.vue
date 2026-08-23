@@ -2,6 +2,7 @@
 import ConfirmModal from "~~/components/admin/modals/ConfirmModal.vue";
 import useStore from "~/mixins/store";
 import CurrencyInput from "~~/components/form/CurrencyInput.vue";
+import moment from "jalali-moment";
 definePageMeta({ layout: "admin" });
 useHead({
   title: "پنل مدیریت | ملک ها",
@@ -23,6 +24,16 @@ const currentPage = ref(1);
 const trashConfirm = ref(false);
 const notUsedConfirm = ref(false);
 const notUsedYear = ref("");
+// سال انتخابی به‌صورت جلالی برای نمایش در مودال تأیید (مدل میلادی است — قرارداد built_year در DB)
+// لنگر وسط سال: round-trip همان سال جلالی‌ای که پیکر انتخاب کرد (اول سال میلادی هنوز سال جلالی قبلی است)
+const notUsedYearJalali = computed(() =>
+  notUsedYear.value
+    ? moment
+        .from(`${notUsedYear.value}-06-01`, "en", "YYYY-MM-DD")
+        .locale("fa")
+        .format("jYYYY")
+    : ""
+);
 const showFilter = ref(false);
 const filterBody = ref(null);
 const categoriesList = ref([]);
@@ -819,7 +830,7 @@ function submitPropertyCode(){
   />
   <ConfirmModal
     v-if="notUsedConfirm"
-    :msg="`آیا از تغییر سال ساخت تمام ملک‌های کلید نخورده به ${notUsedYear} اطمینان دارید؟`"
+    :msg="`آیا از تغییر سال ساخت تمام ملک‌های کلید نخورده به ${notUsedYearJalali} اطمینان دارید؟`"
     @confirm="confirmUpdateNotUsedYear"
     @closeModal="notUsedConfirm = false"
   />
