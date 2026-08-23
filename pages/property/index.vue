@@ -21,6 +21,8 @@ const route = useRoute();
 const router = useRouter();
 const currentPage = ref(1);
 const trashConfirm = ref(false);
+const notUsedConfirm = ref(false);
+const notUsedYear = ref("");
 const showFilter = ref(false);
 const filterBody = ref(null);
 const categoriesList = ref([]);
@@ -65,6 +67,35 @@ function trashProperty() {
       propertyStore.getProperty(currentPage.value);
     });
   }
+}
+
+// تغییر دسته‌جمعی سال ساخت ملک‌های کلید نخورده
+function updateNotUsedYear() {
+  if (notUsedYear.value == "") {
+    $toast("لطفا سال مورد نظر را انتخاب کنید.", "error", 2000);
+    return;
+  }
+  notUsedConfirm.value = true;
+}
+
+function confirmUpdateNotUsedYear() {
+  $toast("منتظر بمانید...", "info", 2000);
+  notUsedConfirm.value = false;
+  propertyStore
+    .updateNotUsedPropertyYear(notUsedYear.value)
+    .then((res) => {
+      if (res.status == "success") {
+        $toast(
+          `سال ساخت ${res.data} ملک کلید نخورده به‌روزرسانی شد`,
+          "success",
+          5000
+        );
+        notUsedYear.value = "";
+      }
+    })
+    .catch(() => {
+      $toast("درخواست شما با خطا مواجه شد", "error", 5000);
+    });
 }
 
 function collapseFilter() {
@@ -562,6 +593,23 @@ function submitPropertyCode(){
       </div>
       <div class="card__body table">
         <div v-if="!propertyStore.loading">
+          <div class="row">
+            <div class="controls w-3/12">
+              <label for="notUsedYear">سال ساخت ملک‌های کلید نخورده</label>
+              <date-picker
+                v-model="notUsedYear"
+                type="year"
+                format="YYYY"
+                displayFormat="jYYYY"
+                simple
+              />
+            </div>
+            <div class="controls w-2/12 action">
+              <button class="btn btn-outline-primary" @click="updateNotUsedYear">
+                به‌روزرسانی
+              </button>
+            </div>
+          </div>
           <div v-if="selected.length > 0" class="row">
             <div class="controls w-3/12">
               <label for="price">قیمت</label>
@@ -768,6 +816,12 @@ function submitPropertyCode(){
     msg="آیا از انتقال این ملک به سطل زباله اطمینان دارید؟"
     @confirm="trashProperty"
     @closeModal="trashConfirm = false"
+  />
+  <ConfirmModal
+    v-if="notUsedConfirm"
+    :msg="`آیا از تغییر سال ساخت تمام ملک‌های کلید نخورده به ${notUsedYear} اطمینان دارید؟`"
+    @confirm="confirmUpdateNotUsedYear"
+    @closeModal="notUsedConfirm = false"
   />
 </template>
 <style lang="scss" scoped>

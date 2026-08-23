@@ -1254,6 +1254,18 @@ export default {
                 custom-input=".custom-built_year"
               />
               <FormInputShowError errorKey="built_year" />
+              <div class="flex items-center mt-2">
+                <input
+                  v-model="propertyStore.properties.is_not_used"
+                  id="is_used"
+                  type="checkbox"
+                  value="is_used"
+                  class=""
+                />
+                <label for="is_used" class="checkbox_label">
+                  کلید نخورده
+                </label>
+              </div>
             </div>
             <div class="controls w-3/12">
               <label class="owner_label" for="owner">
@@ -2886,18 +2898,6 @@ export default {
           <div class="row">
             <div class="controls w-1/2 check_control">
               <div class="flex flex-col">
-                <div class="flex items-center mb-4">
-                  <input
-                    v-model="propertyStore.properties.is_not_used"
-                    id="is_used"
-                    type="checkbox"
-                    value="is_used"
-                    class=""
-                  />
-                  <label for="is_used" class="checkbox_label">
-                    کلید نخورده
-                  </label>
-                </div>
                 <div class="flex items-center mb-4">
                   <input
                     v-model="propertyStore.properties.is_special"
