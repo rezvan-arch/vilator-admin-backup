@@ -306,6 +306,43 @@ function multiUpdate() {
     });
 }
 
+// افزایش/کاهش درصدی قیمت
+const percentageForm = reactive({
+  percentage: null,
+  direction: "increase",
+});
+const percentageConfirm = ref(false);
+
+function submitPercentageChange() {
+  if (!percentageForm.percentage || percentageForm.percentage <= 0) {
+    $toast("لطفاً درصد را وارد کنید", "error", 2000);
+    return;
+  }
+  percentageConfirm.value = true;
+}
+
+function confirmPercentageChange() {
+  percentageConfirm.value = false;
+  $toast("در حال اعمال تغییرات...", "info", 2000);
+  propertyStore
+    .changePropertyPriceByPercentage({
+      property_ids: selected.value,
+      percentage: Number(percentageForm.percentage),
+      direction: percentageForm.direction,
+    })
+    .then((res) => {
+      if (res.status == "success") {
+        $toast(res.message || "تغییرات با موفقیت اعمال شد", "success", 5000);
+        percentageForm.percentage = null;
+        percentageForm.direction = "increase";
+        propertyStore.getProperty(currentPage.value);
+      }
+    })
+    .catch((err) => {
+      $toast(err?.response?.data?.message || "خطا در اعمال تغییرات", "error", 5000);
+    });
+}
+
 function createTemporaryLink(id) {
   const today = new Date();
   let tomorrow = new Date(today);
@@ -666,6 +703,45 @@ function submitPropertyCode(){
               </button>
             </div>
           </div>
+          <!-- افزایش/کاهش درصدی قیمت -->
+          <div v-if="selected.length > 0" class="row mt-3">
+            <div class="controls w-2/12">
+              <label>جهت تغییر</label>
+              <v-select
+                v-model="percentageForm.direction"
+                :options="[
+                  { label: 'افزایش', value: 'increase' },
+                  { label: 'کاهش', value: 'decrease' },
+                ]"
+                :reduce="(option) => option.value"
+                autocomplete="off"
+              >
+                <template #no-options>
+                  <p class="text-sm opacity-60 text-center">
+                    گزینه مورد نظر پیدا نشد
+                  </p>
+                </template>
+              </v-select>
+            </div>
+            <div class="controls w-2/12">
+              <label>درصد (%)</label>
+              <input
+                v-model="percentageForm.percentage"
+                type="number"
+                min="0.01"
+                max="100"
+                step="0.01"
+                class="form-control"
+                placeholder="مثلاً 10"
+              />
+            </div>
+            <div class="controls w-2/12 action">
+              <button class="btn btn-outline-warning" @click="submitPercentageChange">
+                <i class="fa-regular fa-percent"></i>
+                اعمال تغییر درصدی
+              </button>
+            </div>
+          </div>
           <div v-if="propertyStore.properties.length > 0">
             <table>
               <thead>
@@ -833,6 +909,12 @@ function submitPropertyCode(){
     :msg="`آیا از تغییر سال ساخت تمام ملک‌های کلید نخورده به ${notUsedYearJalali} اطمینان دارید؟`"
     @confirm="confirmUpdateNotUsedYear"
     @closeModal="notUsedConfirm = false"
+  />
+  <ConfirmModal
+    v-if="percentageConfirm"
+    :msg="`آیا از ${percentageForm.direction === 'increase' ? 'افزایش' : 'کاهش'} ${percentageForm.percentage} درصد قیمت ${selected.length} ملک انتخاب شده اطمینان دارید؟`"
+    @confirm="confirmPercentageChange"
+    @closeModal="percentageConfirm = false"
   />
 </template>
 <style lang="scss" scoped>

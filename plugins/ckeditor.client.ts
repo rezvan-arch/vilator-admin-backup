@@ -1,4 +1,4 @@
-import {CkeditorPlugin} from "@ckeditor/ckeditor5-vue";
+import CkeditorPlugin from "@ckeditor/ckeditor5-vue";
 // import ClassicEditor from "@ckeditor/ckeditor5-build-classic";
 import Editor from "~/lib/CustomEditor";
 

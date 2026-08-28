@@ -8,7 +8,7 @@ export default defineNuxtConfig({
   compatibilityDate: "2024-10-27",
   app: {
     head: {
-      charset: "utf-16",
+      charset: "utf-8",
       viewport: "width=device-width, initial-scale=1",
       /* titleTemplate: "%s | ویلاطور",
       title: "vilator",

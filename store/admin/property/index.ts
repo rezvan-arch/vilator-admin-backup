@@ -581,6 +581,9 @@ export const propertyStore = defineStore({
     async updateMultiProperty(data: any) {
       return await this.$axios.post(`/api/property/change/multi`, data);
     },
+    async changePropertyPriceByPercentage(data: any) {
+      return await this.$axios.post(`/api/property/change/percentage`, data);
+    },
     // تغییر دسته‌جمعی سال ساخت ملک‌های کلید نخورده (فقط property — پروژه‌ها را شامل نمی‌شود)
     async updateNotUsedPropertyYear(built_year: string | number) {
       return await this.$axios.post(`/api/property/change/not-used`, {
