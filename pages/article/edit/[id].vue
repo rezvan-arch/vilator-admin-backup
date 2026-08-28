@@ -17,6 +17,7 @@ const loadingData = ref(true);
 const form = reactive({
   title: "",
   h1: "",
+  full_slug: "",
   summary: "",
   content: "",
   type: "cluster",
@@ -53,6 +54,7 @@ async function loadArticle() {
   }
   form.title = item.title;
   form.h1 = item.h1;
+  form.full_slug = item.full_slug ?? "";
   form.summary = item.summary ?? "";
   form.content = item.content ?? "";
   form.type = item.type;

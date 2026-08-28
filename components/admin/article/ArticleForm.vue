@@ -11,6 +11,15 @@
       </div>
     </div>
 
+    <div class="row" v-if="form.full_slug">
+      <div class="controls w-full">
+        <label>آدرس نهایی مقاله (full_slug — پس از ذخیره بر اساس هاب/والد/slug ساخته می‌شود)</label>
+        <div class="bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-xs text-gray-500 dir-ltr text-left">
+          https://vilator.com/{{ form.full_slug }}
+        </div>
+      </div>
+    </div>
+
     <div class="row">
       <div class="controls w-full">
         <label for="summary">خلاصه مقاله</label>

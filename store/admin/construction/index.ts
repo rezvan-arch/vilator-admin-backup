@@ -8,6 +8,7 @@ export const constructionStore = defineStore({
       services: [],
       projects: [],
       leads: [],
+      calculator: null,
       single: null,
       meta: [],
       actionId: "",
@@ -115,6 +116,22 @@ export const constructionStore = defineStore({
     },
     async deleteLead(id: string) {
       return await this.$axios.delete(`/api/construction/leads/${id}`);
+    },
+    // ---------- تنظیمات ماشین‌حساب تخمین هزینه ----------
+    async getCalculatorSettings() {
+      this.loading = true;
+      return await this.$axios
+        .get(`/api/construction/calculator-settings`)
+        .then((res: any) => {
+          if (res.status == "success") {
+            this.calculator = res.data;
+            this.loading = false;
+          }
+          return res;
+        });
+    },
+    async updateCalculatorSettings(body: any) {
+      return await this.$axios.put(`/api/construction/calculator-settings`, body);
     },
   },
 });

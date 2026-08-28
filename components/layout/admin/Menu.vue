@@ -118,6 +118,10 @@ const navItem = [
         text: "لیدها",
         link: "/construction/leads",
       },
+      {
+        text: "تنظیمات ماشین‌حساب",
+        link: "/construction/calculator",
+      },
     ],
   },
   {
