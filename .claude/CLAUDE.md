@@ -96,3 +96,54 @@
 - ⚠️ **تبدیل سال میلادی→جلالی با لنگر وسط سال:** `moment("2022", "YYYY")` اول ژانویه است که هنوز در سال جلالیِ قبلی است (۱۴۰۰). برای نمایش معادل جلالی یک سال میلادی، لنگر وسط سال بگذار: `moment.from(`${year}-06-01`, "en", "YYYY-MM-DD").locale("fa").format("jYYYY")` — وگرنه مودال تأیید «۱۴۰۰» نشان می‌دهد در حالی که کاربر «۱۴۰۱» انتخاب کرده (باگ واقعی که تست E2E کشف کرد، کامیت `7a25ad9`).
 - **درس تست E2E با vue3-persian-datetime-picker (Playwright):** پنل سال با کلیک روی آیکون (`span.vpd-input-group`) باز می‌شود نه خود input (input readonly است — تایپ جواب نمی‌دهد)؛ آیتم‌های سال داخل `div.vpd-column-content` با اسکرول داخلیاند و خارج از دید (y منفی) رندر می‌شوند — `scrollIntoViewIfNeeded` لازم است؛ `click()` پلی‌رایت روی آیتم کار نمی‌کند، `el.click()` بومی جواب می‌دهد؛ برای `simple` + `type="year"` بدون autoSubmit پنل با دکمه «تایید» (`.vpd-actions button`) بسته می‌شود. اسکریپت‌های تست: `site/scripts/check-notused-ui.mjs` و `check-notused-confirm.mjs` (از پوشه‌ی site اجرا شوند).
 - **تست E2E کامل (8/24/2026):** از UI — انتخاب ۱۴۰۱ → مودال «به 1401» → «بله» → توست «سال ساخت 1 ملک کلید نخورده به‌روزرسانی شد» → DB: `built_year: 2022` و `property_type` سالم. API — با `property_type:"property"` فقط ملک عوض شد و پروژه دست‌نخورده ماند؛ بدون پارامتر هر دو (سازگاری قبلی)؛ مقدار نامعتبر → 422. همه با رکوردهای تستی موقت (بعد پاک شدند).
+
+## تاریخچه قیمت ملک — ماژول PropertyPrice
+- **پنل ادمین:** صفحات `/price-history` (لیست همه‌ی تاریخچه‌ها) و `/price-history/[id]` (جزئیات یک ملک — افزودن/ویرایش/حذف ردیف قیمت با تاریخ)
+- **استور:** `store/admin/price-history/index.ts` — اکشن‌ها: getAll, getSingle, deleteSingle, getSingleByProperty, insertSingleDatePrice, updateSingleDatePrice, deleteSingleDate
+- **ذخیره خودکار:** هنگام ایجاد ملک و آپدیت قیمت، PropertyObserver خودکار تاریخچه را ذخیره می‌کند
+
+## افزایش/کاهش درصدی دسته‌جمعی قیمت (8/25/2026)
+- **مکان UI:** صفحه لیست ملک‌ها (`pages/property/index.vue`) — فرم درصدی فقط وقتی نمایش داده می‌شود که ملک‌هایی انتخاب شده باشند (زیر فرم آپدیت موجود)
+- **اجزای فرم:**
+  - SelectBox انتخاب جهت: افزایش (`increase`) / کاهش (`decrease`) — مقدار پیش‌فرض: افزایش
+  - فیلد عددی درصد (type=number, min=0.01, max=100, step=0.01)
+  - دکمه «اعمال تغییر درصدی» با آیکون percent
+- **جریان:** انتخاب ملک‌ها → فرم درصدی ظاهر می‌شود → ورود درصد + جهت → کلیک دکمه → مودال تأیید («آیا از افزایش/کاهش X% قیمت N ملک اطمینان دارید؟») → تأیید → درخواست API → toast موفقیت + رفرش لیست
+- **استور:** `store/admin/property/index.ts` → اکشن `changePropertyPriceByPercentage(data)` → `POST /api/property/change/percentage`
+- **ساختار request:** `{ property_ids: string[], percentage: number, direction: 'increase' | 'decrease' }`
+- **اعتبارسنجی سمت سرور:** `ChangePricePercentageRequest` — percentage باید بین 0.01 تا 100 باشد
+- **نکات:**
+  - ⚠️ از همان permission `property.change-multi` استفاده می‌شود — permission جدیدی لازم نیست
+  - ملک‌های بدون قیمت (`price = null`) رد می‌شوند (خطا نیست — فقط skip)
+  - بعد از ذخیره، PropertyObserver خودکار تاریخچه قیمت را هم ذخیره می‌کند
+  - پاسخ Axios از طریق interceptor بازگشایی می‌شود (`response.data`) — بنابراین `res.status` == "success" و `res.message` درست است (نه `res.data.status`)
+
+## بخش دانش و ساخت — فاز ۲ پنل ادمین (8/28/2026)
+مدیریت مقالات مجله + خدمات/پروژه‌های ساخت + لیدهای ماشین‌حساب. بک‌اند: `backend/.claude/CLAUDE.md` ← «ماژول‌های Article و Construction».
+
+### فایل‌های جدید
+- **استورها:** `store/admin/article/index.ts` (getAll با فیلتر search/type/hub/status، getSingle، createArticle، updateArticle، deleteArticle) و `store/admin/construction/index.ts` (سه بخش: services/projects/leads — getAll*, getSingle*, create*, update*, delete*)
+- **کامپوننت‌های فرم مشترک (new و edit از آنها استفاده می‌کنند):**
+  - `components/admin/article/ArticleForm.vue` — title/h1/summary، انتخاب type و hub، انتخاب والد پیلار (وقتی type=cluster؛ از index با فیلتر `type=pillar&per_page=200`)، location_slug (وقتی type=location_hub)، featured image از مدیا (AdminMediaMediaImportModal + preview)، RichEditor (CKEditor) برای content، تب سئو (seo_title/description/canonical/is_indexable)، بخش متای منطقه فقط برای location_hub (میانگین قیمت متر، فاصله/زمان تا تهران، آب‌وهوا، امتیاز سرمایه‌گذاری، مزایا/معایب داینامیک). فیلدهای نامربوط به هر type قبل از ارسال حذف می‌شوند (cleanBody).
+  - `components/admin/construction/ServiceForm.vue` — پکیج‌ها داینامیک (title/description/price + featuresText به‌صورت چندخطی که در cleanBody به آرایه features تبدیل می‌شود)، FAQها داینامیک، سئو.
+  - `components/admin/construction/ProjectForm.vue` — مشخصات فنی (متراژ/طبقات/مدت/سبک/وضعیت)، video_url، سئو.
+- **صفحات:**
+  - `pages/article/index.vue` (لیست با فیلتر نوع/وضعیت + جستجو + صفحه‌بندی + حذف)، `pages/article/new/index.vue`، `pages/article/edit/[id].vue`
+  - `pages/construction/services/{index,new/index,edit/[id].vue}`، `pages/construction/projects/{index,new/index,edit/[id].vue}`، `pages/construction/leads/index.vue` (لیست لیدها با فیلتر وضعیت + تغییر وضعیت inline با v-select + قیمت برآورد با toLocaleString فارسی)
+- **منو:** `components/layout/admin/Menu.vue` — دو آیتم جدید: «مجله» (لیست/ایجاد مقاله) و «ساخت و ساز» (خدمات/پروژه‌ها/لیدها) بعد از «پروژه».
+
+### درس‌های مهم
+- ⚠️ **`useStore` auto-import نمی‌شود** — در کامپوننت‌ها (برخلاف صفحات) باید `import useStore from "~~/mixins/store";` صریح باشد. نبودش → `ReferenceError: useStore is not defined` در setup → کل subtree خالی بدون هیچ نشانه در DOM (main فقط هدر را نشان می‌دهد) و خطا فقط در unhandledrejection. تشخیص: نصب هندلر `window.addEventListener("unhandledrejection")` از کنسول و ناوبری SPA با `$router.push` (نه reload، چون هندلر با reload پاک می‌شود).
+- استورها در `mixins/store.js` ثبت شدند: `articleStore` و `constructionStore` (نام در return با کلید camelCase).
+- پاسخ بک‌اند create با status 201 برمی‌گردد ولی interceptor مقدار `res.status == "success"` را از body می‌دهد (نه HTTP status).
+- فیلد `features` پکیج‌ها به‌صورت آرایه از بک‌اند می‌آید؛ در فرم به `featuresText` (چندخطی) تبدیل و در cleanBody برعکس. پکیج‌های بدون title در ارسال فیلتر می‌شوند (ولیدیشن required_with).
+- `h1` مقاله/خدمت/پروژه در Seeder ممکن است null باشد — فرم‌ها در cleanBody آن را با title جایگزین می‌کنند (بک‌اند h1 مقاله را required می‌خواهد).
+- CKEditor با `editor.setData()` برنامه‌ای v-model را آپدیت نمی‌کند (instance روی DOM element هم attach نیست — `el.ckeditor` undefined)؛ برای تست E2E باید تایپ واقعی شبیه‌سازی شود. این محدودیت تست است نه باگ اپ — زنجیره v-model در update E2E تأیید شد (محتوای prefill سالم رفت و برگشت).
+
+### تست‌های انجام‌شده (لوکال، مرورگر واقعی)
+- لیست مقالات: ۲۵ مقاله + صفحه‌بندی + فیلترها ✅
+- ویرایش مقاله: prefill کامل (شامل published_at برش ۱۰ کاراکتر برای input date) + ذخیره → ریدایرکت به لیست ✅
+- ویرایش خدمت «طراحی ویلای مدرن»: ۲ پکیج + FAQ prefill و ذخیره موفق ✅
+- لیست پروژه‌ها/لیدها: دیتای Seeder نمایش درست (قیمت با toLocaleString فارسی، لیبل فارسی وضعیت‌ها) ✅
+- تغییر وضعیت لید inline: «جدید» → «تبدیل شد» → توست + تأیید در DB ✅
+- رندر: article/new، construction/services/new، construction/projects/new و edit همگی سالم (mainLen ~۲۶-۳۰KB، CKEditor ساخته می‌شود) ✅

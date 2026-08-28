@@ -88,6 +88,40 @@ const navItem = [
   },
   {
     type: "nav",
+    text: "مجله",
+    icon: "fa-regular fa-newspaper",
+    subItem: [
+      {
+        text: "لیست مقالات",
+        link: "/article",
+      },
+      {
+        text: "ایجاد مقاله جدید",
+        link: "/article/new",
+      },
+    ],
+  },
+  {
+    type: "nav",
+    text: "ساخت و ساز",
+    icon: "fa-regular fa-trowel-bricks",
+    subItem: [
+      {
+        text: "خدمات ساخت",
+        link: "/construction/services",
+      },
+      {
+        text: "پروژه‌های ساخت",
+        link: "/construction/projects",
+      },
+      {
+        text: "لیدها",
+        link: "/construction/leads",
+      },
+    ],
+  },
+  {
+    type: "nav",
     text: "تاریخچه ها",
     icon: "fa-regular fa-clock-rotate-left",
     subItem: [

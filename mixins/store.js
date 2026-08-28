@@ -20,6 +20,8 @@ import { filterGroupsStore as filterGroups } from "~~/store/admin/filters/index"
 import { landingPage as searchResult } from "~~/store/admin/landing-page/index";
 import { useQuickAccessStore } from "~/store/admin/quick-access";
 import { useSitemapStore } from "~/store/admin/sitemap";
+import { articleStore } from "~/store/admin/article/index";
+import { constructionStore } from "~/store/admin/construction/index";
 
 export default function useStore() {
   const indexStore = index();
@@ -44,6 +46,8 @@ export default function useStore() {
   const landingPage = searchResult();
   const quickAccessStore = useQuickAccessStore();
   const sitemapStore = useSitemapStore();
+  const article = articleStore();
+  const construction = constructionStore();
 
   return {
     indexStore,
@@ -69,5 +73,7 @@ export default function useStore() {
     landingPage,
     quickAccessStore,
     sitemapStore,
+    articleStore: article,
+    constructionStore: construction,
   };
 }
