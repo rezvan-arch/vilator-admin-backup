@@ -137,6 +137,21 @@ const navItem = [
   },
   {
     type: "nav",
+    text: "اعتمادسازی",
+    icon: "fa-regular fa-star",
+    subItem: [
+      {
+        text: "نظرات مشتریان",
+        link: "/testimonials",
+      },
+      {
+        text: "نظر جدید",
+        link: "/testimonials/form/new",
+      },
+    ],
+  },
+  {
+    type: "nav",
     text: "تایپ ها",
     icon: "fa-regular fa-font-awesome",
     subItem: [
