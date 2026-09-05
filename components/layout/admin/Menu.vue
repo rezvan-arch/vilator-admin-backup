@@ -152,6 +152,17 @@ const navItem = [
   },
   {
     type: "nav",
+    text: "تحلیل",
+    icon: "fa-regular fa-chart-line",
+    subItem: [
+      {
+        text: "گزارش رویدادها",
+        link: "/analytics",
+      },
+    ],
+  },
+  {
+    type: "nav",
     text: "تایپ ها",
     icon: "fa-regular fa-font-awesome",
     subItem: [
