@@ -81,6 +81,14 @@ function formatPrice(value) {
   if (!value) return "-";
   return Number(value).toLocaleString("fa-IR");
 }
+
+// CRO: شماره 09xxxx → wa.me با فرمت بینالمللی 98xxxxxxxxxx
+function waNumber(mobile) {
+  const digits = String(mobile).replace(/\D/g, "");
+  if (digits.startsWith("98")) return digits;
+  if (digits.startsWith("0")) return "98" + digits.slice(1);
+  return "98" + digits;
+}
 </script>
 <template>
   <section class="properties__list">
@@ -123,7 +131,18 @@ function formatPrice(value) {
                   :key="index"
                 >
                   <td class="font-bold">{{ item.name ?? "-" }}</td>
-                  <td dir="ltr">{{ item.mobile ?? "-" }}</td>
+                  <!-- CRO: تعهد «گزارش در واتساپ ارسال میشود» — ارسال با یک کلیک -->
+                  <td dir="ltr">
+                    <a
+                      v-if="item.mobile"
+                      :href="`https://wa.me/${waNumber(item.mobile)}`"
+                      target="_blank"
+                      title="ارسال پیام واتساپ"
+                      class="text-emerald-600 hover:underline"
+                      >{{ item.mobile }}</a
+                    >
+                    <template v-else>-</template>
+                  </td>
                   <td>{{ item.project_type ?? "-" }}</td>
                   <td>{{ item.estimated_area ? item.estimated_area + " متر" : "-" }}</td>
                   <td>{{ item.floors ?? "-" }}</td>
