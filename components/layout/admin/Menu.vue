@@ -368,6 +368,12 @@ const navItem = [
     icon: "fa-regular fa-dollar-sign",
   },
   {
+    type: "link",
+    link: "/landing-content",
+    text: "محتوای لندینگ",
+    icon: "fa-regular fa-file-lines",
+  },
+  {
     type: "page",
     text: "تنظیمات",
   },
