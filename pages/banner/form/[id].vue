@@ -1,9 +1,13 @@
 <script>
 import { bannerStore } from "~/store/admin/banner/index";
+import BannerPreview from "~/components/BannerPreview.vue";
 
 // فرم مشترک ساخت/ویرایش بنر «کارت بومی» — new (بدون id) و edit/[id]
 // placement = جایگاه نمایش در سایت (فعلاً: landing برای صفحات فرود /property)
 export default {
+  components: {
+    BannerPreview,
+  },
   setup() {
     definePageMeta({ layout: "admin" });
     useHead({
@@ -27,6 +31,8 @@ export default {
         button_link: "",
         sort_order: 0,
         is_active: true,
+        starts_at: "",
+        ends_at: "",
       },
       loading: false,
       isEdit: false,
@@ -56,6 +62,8 @@ export default {
               button_link: res.data.button_link ?? "",
               sort_order: res.data.sort_order ?? 0,
               is_active: res.data.is_active ?? true,
+              starts_at: res.data.starts_at ?? "",
+              ends_at: res.data.ends_at ?? "",
             };
           }
           this.store.loading = false;
@@ -73,6 +81,14 @@ export default {
         this.$toast("تیتر وارد نشده است!", "error", 2000);
         return;
       }
+      if (this.form.starts_at && this.form.ends_at) {
+        const startDate = new Date(this.form.starts_at);
+        const endDate = new Date(this.form.ends_at);
+        if (endDate <= startDate) {
+          this.$toast("زمان پایان باید بعد از زمان شروع باشد!", "error", 2500);
+          return;
+        }
+      }
       this.loading = true;
 
       const payload = {
@@ -83,6 +99,8 @@ export default {
         button_link: this.form.button_link.trim(),
         sort_order: Number(this.form.sort_order) || 0,
         is_active: this.form.is_active,
+        starts_at: this.form.starts_at || null,
+        ends_at: this.form.ends_at || null,
       };
 
       try {
@@ -122,14 +140,27 @@ export default {
         </h4>
       </div>
       <div class="card__body">
+        <BannerPreview
+          v-if="!loading"
+          :placement="form.placement"
+          :title="form.title"
+          :description="form.description"
+          :button_text="form.button_text"
+          :button_link="form.button_link"
+          :is_active="form.is_active"
+        />
+
         <div class="row">
           <div class="controls w-1/2">
-            <FormTextInput
-              v-model="form.placement"
-              label="جایگاه (placement) * — landing برای صفحات فرود /property"
-              name="placement"
-              :ltr="true"
-            />
+            <label>جایگاه (placement) *</label>
+            <select v-model="form.placement" class="w-full">
+              <option value="landing">landing — همه صفحات فرود /property</option>
+              <option value="landing-type-villa">landing-type-villa — فقط ویلا</option>
+              <option value="landing-type-apartment">landing-type-apartment — فقط آپارتمان</option>
+              <option value="landing-type-house">landing-type-house — فقط خانه</option>
+              <option value="landing-type-land">landing-type-land — فقط زمین</option>
+              <option value="landing-type-commercial">landing-type-commercial — فقط تجاری</option>
+            </select>
           </div>
           <div class="controls w-1/2">
             <FormTextInput
@@ -179,10 +210,26 @@ export default {
               type="number"
             />
           </div>
+          <div class="controls w-1/2">
+            <label>زمان شروع نمایش</label>
+            <input
+              v-model="form.starts_at"
+              type="datetime-local"
+              class="w-full"
+            />
+          </div>
         </div>
 
         <div class="row">
-          <div class="controls w-full flex items-center gap-2">
+          <div class="controls w-1/2">
+            <label>زمان پایان نمایش</label>
+            <input
+              v-model="form.ends_at"
+              type="datetime-local"
+              class="w-full"
+            />
+          </div>
+          <div class="controls w-1/2 flex items-center gap-2">
             <input id="banner__active" v-model="form.is_active" type="checkbox" />
             <label for="banner__active">
               فعال باشد (در سایت نمایش داده شود)

@@ -238,6 +238,10 @@ const navItem = [
         text: "محتوای لندینگ",
         link: "/landing-content",
       },
+      {
+        text: "واژهنامه لینکدهی",
+        link: "/glossary",
+      },
     ],
   },
 

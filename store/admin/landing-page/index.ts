@@ -11,6 +11,17 @@ export const landingPage = defineStore({
       actionId: "",
       pagination: [] as any,
       types: [] as any,
+      candidates: [] as any,
+      candidatesLoading: false,
+      formula: {
+        h1: "",
+        seo_title: "",
+        meta_desc: "",
+        intro: "",
+      } as any,
+      formulaSaving: false,
+      // کاندید انتخابشده در مودال کاندیدها — فرم «ساخت صفحه فرود» آن را پیش‌پر می‌کند
+      prefill: null as any,
     };
   },
   actions: {
@@ -106,6 +117,61 @@ export const landingPage = defineStore({
     },
     async editSearch(form: any, id: string) {
       return await this.$axios.put(`/api/landing-page/edit/${id}`, form);
+    },
+    async getCandidates(params: any = {}) {
+      this.candidatesLoading = true;
+      return await this.$axios
+        .get(`/api/landing-page/candidates`, {
+          params: {
+            min_count: 1,
+            limit: 100,
+            ...params,
+          },
+        })
+        .then((res: any) => {
+          if (res.status == "success") {
+            this.candidates = res.data.candidates;
+          }
+          this.candidatesLoading = false;
+          return res;
+        })
+        .catch((err: any) => {
+          this.candidatesLoading = false;
+          return Promise.reject(err);
+        });
+    },
+    async bulkGenerate(body: any = {}) {
+      return await this.$axios.post(`/api/landing-page/bulk-generate`, {
+        min_count: 1,
+        limit: 200,
+        ...body,
+      });
+    },
+    async getFormula() {
+      return await this.$axios.get(`/api/landing-page/formula`).then((res: any) => {
+        if (res.status == "success") {
+          this.formula = {
+            h1: res.data.h1 ?? "",
+            seo_title: res.data.seo_title ?? "",
+            meta_desc: res.data.meta_desc ?? "",
+            intro: res.data.intro ?? "",
+          };
+        }
+        return res;
+      });
+    },
+    async updateFormula(payload: any) {
+      this.formulaSaving = true;
+      return await this.$axios
+        .put(`/api/landing-page/formula`, payload)
+        .then((res: any) => {
+          this.formulaSaving = false;
+          return res;
+        })
+        .catch((err: any) => {
+          this.formulaSaving = false;
+          return Promise.reject(err);
+        });
     },
   },
 });

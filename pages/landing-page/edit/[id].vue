@@ -54,6 +54,31 @@ export default {
       .getSearch(this.$route.params.id)
       .then(async (res) => {
         if (res.status == "success") {
+          // نرمالسازی فیلدهای محتوای لندینگ (intro/faqs/links/is_indexable)
+          const single = this.landingPage.searches;
+          single.heading = single.heading ?? "";
+          single.source = single.source ?? "manual";
+          single.intro = Array.isArray(single.intro)
+            ? single.intro.map((item) => item ?? "")
+            : [];
+          single.faqs = Array.isArray(single.faqs)
+            ? single.faqs.map((item) => ({
+                question: item.question ?? "",
+                answer: item.answer ?? "",
+              }))
+            : [];
+          single.links = Array.isArray(single.links)
+            ? single.links.map((item) => ({
+                label: item.label ?? "",
+                to: item.to ?? "",
+              }))
+            : [];
+          single.is_indexable = single.is_indexable == true;
+          single.seo_option = single.seo_option ?? {
+            seo_title: "",
+            seo_description: "",
+          };
+
           this.locSlugList.forEach(async (slugItem, index) => {
             await this.locationStore
               .getLocationsSelect("", slugItem)
@@ -180,6 +205,11 @@ export default {
 
             display_index:
               this.landingPage.searches.display_index == true ? 1 : 0,
+            heading: (this.landingPage.searches.heading || "").trim(),
+            intro: this.cleanList(this.landingPage.searches.intro || []),
+            faqs: this.cleanList(this.landingPage.searches.faqs || []),
+            links: this.cleanList(this.landingPage.searches.links || []),
+            is_indexable: this.landingPage.searches.is_indexable == true,
           },
           this.landingPage.searches.id
         )
@@ -279,6 +309,49 @@ export default {
           this.landingPage.searches.query[item] = null;
         });
     },
+    addIntro() {
+      if (this.landingPage.searches.intro.length < 5)
+        this.landingPage.searches.intro.push("");
+    },
+    removeIntro(i) {
+      this.landingPage.searches.intro.splice(i, 1);
+    },
+    addFaq() {
+      if (this.landingPage.searches.faqs.length < 8)
+        this.landingPage.searches.faqs.push({ question: "", answer: "" });
+    },
+    removeFaq(i) {
+      this.landingPage.searches.faqs.splice(i, 1);
+    },
+    addLink() {
+      if (this.landingPage.searches.links.length < 8)
+        this.landingPage.searches.links.push({ label: "", to: "" });
+    },
+    removeLink(i) {
+      this.landingPage.searches.links.splice(i, 1);
+    },
+    // حذف ردیفهای خالی قبل از ارسال (بکاند آیتمهای خالی را قبول نمیکند)
+    cleanList(list) {
+      return list
+        .map((item) =>
+          typeof item === "string"
+            ? item.trim()
+            : {
+                question: (item.question || "").trim(),
+                answer: (item.answer || "").trim(),
+                label: (item.label || "").trim(),
+                to: (item.to || "").trim(),
+              }
+        )
+        .filter((item) =>
+          typeof item === "string"
+            ? item !== ""
+            : item.question !== "" ||
+              item.answer !== "" ||
+              item.label !== "" ||
+              item.to !== ""
+        );
+    },
     getParent(data) {
       const list = [
         "country",
@@ -329,7 +402,15 @@ export default {
     <template v-if="!landingPage.loading">
       <div class="card">
         <div class="card__header">
-          <h4 class="heading__title">ویرایش صفحه فرود</h4>
+          <div class="flex items-center gap-2">
+            <h4 class="heading__title">ویرایش صفحه فرود</h4>
+            <span
+              v-if="landingPage.searches.source == 'auto'"
+              class="badge badge-pill badge-primary"
+            >
+              خودکار
+            </span>
+          </div>
           <div class="heading__actions">
             <button
               :disabled="trashLoading"
@@ -993,6 +1074,178 @@ export default {
           </div>
         </div>
       </div>
+      <div class="card">
+        <div class="card__header">
+          <h4 class="heading__title">محتوای لندینگ</h4>
+        </div>
+        <div class="card__body">
+          <div class="row">
+            <div class="controls w-full">
+              <div
+                class="bg-blue-50 border-t-4 border-blue-500 rounded-b text-blue-900 px-4 py-3 shadow-md mb-4"
+                role="alert"
+              >
+                <p class="text-sm font-semibold">
+                  فیلدهای خالی = مقدار خودکار؛ عنوان خالی از روی فیلترها ساخته
+                  میشود.
+                </p>
+              </div>
+            </div>
+          </div>
+          <div class="row">
+            <div class="controls w-1/2">
+              <FormTextInput
+                v-model="landingPage.searches.heading"
+                name="lp_heading"
+                label="تیتر (H1) — خالی = خودکار"
+              />
+            </div>
+          </div>
+
+          <!-- پاراگرافهای معرفی -->
+          <div class="row">
+            <div class="controls w-full">
+              <div class="flex items-center justify-between mb-2">
+                <label>پاراگرافهای معرفی (حداکثر ۵)</label>
+                <button
+                  type="button"
+                  class="btn btn-primary py-1 px-3 text-sm"
+                  :disabled="landingPage.searches.intro.length >= 5"
+                  @click="addIntro()"
+                >
+                  <i class="fa-regular fa-plus"></i> پاراگراف
+                </button>
+              </div>
+              <div
+                v-for="(p, i) in landingPage.searches.intro"
+                :key="`intro-${i}`"
+                class="flex items-start gap-2 mb-2"
+              >
+                <textarea
+                  v-model="landingPage.searches.intro[i]"
+                  rows="3"
+                  class="w-full"
+                ></textarea>
+                <button
+                  type="button"
+                  class="btn btn-danger py-1 px-2"
+                  @click="removeIntro(i)"
+                  title="حذف پاراگراف"
+                >
+                  <i class="fa-regular fa-trash"></i>
+                </button>
+              </div>
+              <p
+                v-if="landingPage.searches.intro.length == 0"
+                class="text-xs opacity-60"
+              >
+                پاراگرافی ثبت نشده — «پاراگراف» را بزنید.
+              </p>
+            </div>
+          </div>
+
+          <!-- سوالات متداول -->
+          <div class="row">
+            <div class="controls w-full">
+              <div class="flex items-center justify-between mb-2">
+                <label>سوالات متداول (حداکثر ۸ — با اسکیمای FAQPage)</label>
+                <button
+                  type="button"
+                  class="btn btn-primary py-1 px-3 text-sm"
+                  :disabled="landingPage.searches.faqs.length >= 8"
+                  @click="addFaq()"
+                >
+                  <i class="fa-regular fa-plus"></i> سوال
+                </button>
+              </div>
+              <div
+                v-for="(faq, i) in landingPage.searches.faqs"
+                :key="`faq-${i}`"
+                class="rounded-lg border border-gray-200 dark:border-baseBlack-200 p-3 mb-2"
+              >
+                <div class="flex items-center gap-2 mb-2">
+                  <input
+                    v-model="faq.question"
+                    type="text"
+                    class="w-full"
+                    placeholder="سوال"
+                  />
+                  <button
+                    type="button"
+                    class="btn btn-danger py-1 px-2"
+                    @click="removeFaq(i)"
+                    title="حذف سوال"
+                  >
+                    <i class="fa-regular fa-trash"></i>
+                  </button>
+                </div>
+                <textarea
+                  v-model="faq.answer"
+                  rows="2"
+                  class="w-full"
+                  placeholder="جواب"
+                ></textarea>
+              </div>
+              <p
+                v-if="landingPage.searches.faqs.length == 0"
+                class="text-xs opacity-60"
+              >
+                سوالی ثبت نشده — «سوال» را بزنید.
+              </p>
+            </div>
+          </div>
+
+          <!-- لینکسازی داخلی -->
+          <div class="row">
+            <div class="controls w-full">
+              <div class="flex items-center justify-between mb-2">
+                <label>لینکهای داخلی (حداکثر ۸)</label>
+                <button
+                  type="button"
+                  class="btn btn-primary py-1 px-3 text-sm"
+                  :disabled="landingPage.searches.links.length >= 8"
+                  @click="addLink()"
+                >
+                  <i class="fa-regular fa-plus"></i> لینک
+                </button>
+              </div>
+              <div
+                v-for="(link, i) in landingPage.searches.links"
+                :key="`link-${i}`"
+                class="flex items-center gap-2 mb-2"
+              >
+                <input
+                  v-model="link.label"
+                  type="text"
+                  class="w-1/3"
+                  placeholder="عنوان لینک"
+                />
+                <input
+                  v-model="link.to"
+                  type="text"
+                  dir="ltr"
+                  class="w-full font-mono text-xs"
+                  placeholder="/mag/... یا /property/..."
+                />
+                <button
+                  type="button"
+                  class="btn btn-danger py-1 px-2"
+                  @click="removeLink(i)"
+                  title="حذف لینک"
+                >
+                  <i class="fa-regular fa-trash"></i>
+                </button>
+              </div>
+              <p
+                v-if="landingPage.searches.links.length == 0"
+                class="text-xs opacity-60"
+              >
+                لینکی ثبت نشده — «لینک» را بزنید.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
       <div v-if="landingPage.searches.seo_option != null" class="card">
         <div class="card__header">
           <h4 class="heading__title">بخش تنظیمات سئو</h4>
@@ -1030,6 +1283,18 @@ export default {
                 rows="3"
               ></textarea>
               <FormInputShowError errorKey="seo_description" />
+            </div>
+          </div>
+          <div class="row">
+            <div class="controls w-full flex items-center gap-2">
+              <input
+                id="lp__indexable"
+                v-model="landingPage.searches.is_indexable"
+                type="checkbox"
+              />
+              <label for="lp__indexable" class="checkbox_label">
+                اجازه ایندکس در موتورهای جستجو
+              </label>
             </div>
           </div>
           <div class="row p-4">

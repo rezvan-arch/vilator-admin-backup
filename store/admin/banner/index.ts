@@ -35,5 +35,8 @@ export const bannerStore = defineStore({
       this.loading = true;
       return await this.$axios.delete(`/api/banner/destroy/${id}`);
     },
+    async incrementClicks(id: string) {
+      return await this.$axios.post(`/api/banner/${id}/click`);
+    },
   },
 });

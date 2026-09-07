@@ -96,6 +96,7 @@ export default {
                   <th>دکمه</th>
                   <th>ترتیب</th>
                   <th>وضعیت</th>
+                  <th style="text-align: left">کلیک</th>
                   <th style="text-align: left">تنظیمات</th>
                 </tr>
               </thead>
@@ -117,6 +118,9 @@ export default {
                     >
                       {{ item.is_active ? "فعال" : "غیرفعال" }}
                     </span>
+                  </td>
+                  <td class="text-sm">
+                    {{ item.clicks || 0 }}
                   </td>
                   <td class="setting">
                     <div class="actions justify-end">

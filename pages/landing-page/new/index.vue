@@ -8,10 +8,15 @@ export default {
       title: "پنل مدیریت | ساخت صفحه فرود ",
     });
     const { indexStore, adminStore, landingPage, locationStore } = useStore();
+    const { $toast } = useNuxtApp();
     landingPage.actionId = "";
     landingPage.loading = true;
 
-    landingPage.getTypes();
+    landingPage.getTypes().then((res) => {
+      if (res.status == "success") {
+        applyPrefill();
+      }
+    });
     landingPage.getSearchLocationCities();
     const locSlugList = [
       "country",
@@ -36,6 +41,11 @@ export default {
       title: "",
       query_url: "",
       description: "",
+      heading: "",
+      intro: [],
+      faqs: [],
+      links: [],
+      is_indexable: true,
       query: {
         type: null,
         country: null, // کشور
@@ -100,6 +110,30 @@ export default {
       }
     }
 
+    // پیشپر کردن فرم از کاندید انتخابشده در لیست صفحه فرود
+    // (لینک استاندارد کاندید در «لینک صفحه فرود» قرار میگیرد — لینک الویت دارد)
+    function applyPrefill() {
+      const prefill = landingPage.prefill;
+      if (!prefill) return;
+
+      form.query_url = prefill.path;
+      if (prefill.type_slug) {
+        const type = landingPage.types.find(
+          (item) => item.slug == prefill.type_slug
+        );
+        if (type) {
+          form.query.type = type;
+        }
+      }
+
+      landingPage.prefill = null;
+      $toast(
+        "مسیر کاندید در لینک صفحه فرود قرار گرفت — در صورت نیاز لوکیشن را نیز انتخاب کنید.",
+        "info",
+        4000
+      );
+    }
+
     return {
       landingPage,
       indexStore,
@@ -157,6 +191,11 @@ export default {
           query_url: decodeURI(this.form.query_url),
           query: newQueryData,
           display_index: this.form.display_index == true ? 1 : 0,
+          heading: this.form.heading.trim(),
+          intro: this.cleanList(this.form.intro),
+          faqs: this.cleanList(this.form.faqs),
+          links: this.cleanList(this.form.links),
+          is_indexable: this.form.is_indexable == true,
         })
         .then((res) => {
           if (res.status == "success") {
@@ -249,6 +288,48 @@ export default {
         .forEach((item) => {
           this.form.query[item] = null;
         });
+    },
+    addIntro() {
+      if (this.form.intro.length < 5) this.form.intro.push("");
+    },
+    removeIntro(i) {
+      this.form.intro.splice(i, 1);
+    },
+    addFaq() {
+      if (this.form.faqs.length < 8)
+        this.form.faqs.push({ question: "", answer: "" });
+    },
+    removeFaq(i) {
+      this.form.faqs.splice(i, 1);
+    },
+    addLink() {
+      if (this.form.links.length < 8)
+        this.form.links.push({ label: "", to: "" });
+    },
+    removeLink(i) {
+      this.form.links.splice(i, 1);
+    },
+    // حذف ردیفهای خالی قبل از ارسال (بکاند آیتمهای خالی را قبول نمیکند)
+    cleanList(list) {
+      return list
+        .map((item) =>
+          typeof item === "string"
+            ? item.trim()
+            : {
+                question: (item.question || "").trim(),
+                answer: (item.answer || "").trim(),
+                label: (item.label || "").trim(),
+                to: (item.to || "").trim(),
+              }
+        )
+        .filter((item) =>
+          typeof item === "string"
+            ? item !== ""
+            : item.question !== "" ||
+              item.answer !== "" ||
+              item.label !== "" ||
+              item.to !== ""
+        );
     },
     getParent(data) {
       const list = [
@@ -879,6 +960,165 @@ export default {
     </div>
     <div class="card">
       <div class="card__header">
+        <h4 class="heading__title">محتوای لندینگ</h4>
+      </div>
+      <div class="card__body">
+        <div class="row">
+          <div class="controls w-full">
+            <div
+              class="bg-blue-50 border-t-4 border-blue-500 rounded-b text-blue-900 px-4 py-3 shadow-md mb-4"
+              role="alert"
+            >
+              <p class="text-sm font-semibold">
+                فیلدهای خالی = مقدار خودکار؛ عنوان خالی از روی فیلترها ساخته
+                میشود.
+              </p>
+            </div>
+          </div>
+        </div>
+        <div class="row">
+          <div class="controls w-1/2">
+            <FormTextInput
+              v-model="form.heading"
+              name="lp_heading"
+              label="تیتر (H1) — خالی = خودکار"
+            />
+          </div>
+        </div>
+
+        <!-- پاراگرافهای معرفی -->
+        <div class="row">
+          <div class="controls w-full">
+            <div class="flex items-center justify-between mb-2">
+              <label>پاراگرافهای معرفی (حداکثر ۵)</label>
+              <button
+                type="button"
+                class="btn btn-primary py-1 px-3 text-sm"
+                :disabled="form.intro.length >= 5"
+                @click="addIntro()"
+              >
+                <i class="fa-regular fa-plus"></i> پاراگراف
+              </button>
+            </div>
+            <div
+              v-for="(p, i) in form.intro"
+              :key="`intro-${i}`"
+              class="flex items-start gap-2 mb-2"
+            >
+              <textarea v-model="form.intro[i]" rows="3" class="w-full"></textarea>
+              <button
+                type="button"
+                class="btn btn-danger py-1 px-2"
+                @click="removeIntro(i)"
+                title="حذف پاراگراف"
+              >
+                <i class="fa-regular fa-trash"></i>
+              </button>
+            </div>
+            <p v-if="form.intro.length == 0" class="text-xs opacity-60">
+              پاراگرافی ثبت نشده — «پاراگراف» را بزنید.
+            </p>
+          </div>
+        </div>
+
+        <!-- سوالات متداول -->
+        <div class="row">
+          <div class="controls w-full">
+            <div class="flex items-center justify-between mb-2">
+              <label>سوالات متداول (حداکثر ۸ — با اسکیمای FAQPage)</label>
+              <button
+                type="button"
+                class="btn btn-primary py-1 px-3 text-sm"
+                :disabled="form.faqs.length >= 8"
+                @click="addFaq()"
+              >
+                <i class="fa-regular fa-plus"></i> سوال
+              </button>
+            </div>
+            <div
+              v-for="(faq, i) in form.faqs"
+              :key="`faq-${i}`"
+              class="rounded-lg border border-gray-200 dark:border-baseBlack-200 p-3 mb-2"
+            >
+              <div class="flex items-center gap-2 mb-2">
+                <input
+                  v-model="faq.question"
+                  type="text"
+                  class="w-full"
+                  placeholder="سوال"
+                />
+                <button
+                  type="button"
+                  class="btn btn-danger py-1 px-2"
+                  @click="removeFaq(i)"
+                  title="حذف سوال"
+                >
+                  <i class="fa-regular fa-trash"></i>
+                </button>
+              </div>
+              <textarea
+                v-model="faq.answer"
+                rows="2"
+                class="w-full"
+                placeholder="جواب"
+              ></textarea>
+            </div>
+            <p v-if="form.faqs.length == 0" class="text-xs opacity-60">
+              سوالی ثبت نشده — «سوال» را بزنید.
+            </p>
+          </div>
+        </div>
+
+        <!-- لینکسازی داخلی -->
+        <div class="row">
+          <div class="controls w-full">
+            <div class="flex items-center justify-between mb-2">
+              <label>لینکهای داخلی (حداکثر ۸)</label>
+              <button
+                type="button"
+                class="btn btn-primary py-1 px-3 text-sm"
+                :disabled="form.links.length >= 8"
+                @click="addLink()"
+              >
+                <i class="fa-regular fa-plus"></i> لینک
+              </button>
+            </div>
+            <div
+              v-for="(link, i) in form.links"
+              :key="`link-${i}`"
+              class="flex items-center gap-2 mb-2"
+            >
+              <input
+                v-model="link.label"
+                type="text"
+                class="w-1/3"
+                placeholder="عنوان لینک"
+              />
+              <input
+                v-model="link.to"
+                type="text"
+                dir="ltr"
+                class="w-full font-mono text-xs"
+                placeholder="/mag/... یا /property/..."
+              />
+              <button
+                type="button"
+                class="btn btn-danger py-1 px-2"
+                @click="removeLink(i)"
+                title="حذف لینک"
+              >
+                <i class="fa-regular fa-trash"></i>
+              </button>
+            </div>
+            <p v-if="form.links.length == 0" class="text-xs opacity-60">
+              لینکی ثبت نشده — «لینک» را بزنید.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card__header">
         <h4 class="heading__title">بخش تنظیمات سئو</h4>
       </div>
       <div class="card__body">
@@ -911,6 +1151,14 @@ export default {
               rows="3"
             ></textarea>
             <FormInputShowError errorKey="seo_description" />
+          </div>
+        </div>
+        <div class="row">
+          <div class="controls w-full flex items-center gap-2">
+            <input id="lp__indexable" v-model="form.is_indexable" type="checkbox" />
+            <label for="lp__indexable" class="checkbox_label">
+              اجازه ایندکس در موتورهای جستجو
+            </label>
           </div>
         </div>
         <div class="row p-4">

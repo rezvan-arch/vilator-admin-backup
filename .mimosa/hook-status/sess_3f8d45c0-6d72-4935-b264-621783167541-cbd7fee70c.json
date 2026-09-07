@@ -1,0 +1,14 @@
+{
+  "schemaVersion": "mimosa-hook-status/v1",
+  "recordedAt": "2026-09-05T16:48:51.262Z",
+  "sessionId": "sess_3f8d45c0-6d72-4935-b264-621783167541",
+  "event": "PostToolUse",
+  "toolName": "Edit",
+  "file": "C:\\Users\\VILATOR\\Projects\\vilator\\backend\\modules\\Web\\Testimonial\\Http\\Resources\\TestimonialResource.php",
+  "outcome": "inconclusive",
+  "coverage": "partial",
+  "findingCount": 0,
+  "durationMs": 6,
+  "hostState": "hook_complete",
+  "reportHint": ".mimosa/reports/"
+}

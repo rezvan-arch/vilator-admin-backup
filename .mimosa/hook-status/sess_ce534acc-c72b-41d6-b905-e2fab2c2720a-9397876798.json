@@ -1,0 +1,14 @@
+{
+  "schemaVersion": "mimosa-hook-status/v1",
+  "recordedAt": "2026-09-06T21:28:33.533Z",
+  "sessionId": "sess_ce534acc-c72b-41d6-b905-e2fab2c2720a",
+  "event": "PostToolUse",
+  "toolName": "Edit",
+  "file": "C:\\Users\\VILATOR\\Projects\\vilator\\site\\store\\search\\index.ts",
+  "outcome": "inconclusive",
+  "coverage": "partial",
+  "findingCount": 0,
+  "durationMs": 8,
+  "hostState": "hook_complete",
+  "reportHint": ".mimosa/reports/"
+}
