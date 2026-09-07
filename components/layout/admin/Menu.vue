@@ -234,6 +234,10 @@ const navItem = [
         text: "ساخت صفحه فرود",
         link: "/landing-page/new",
       },
+      {
+        text: "محتوای لندینگ",
+        link: "/landing-content",
+      },
     ],
   },
 
@@ -369,9 +373,15 @@ const navItem = [
   },
   {
     type: "link",
-    link: "/landing-content",
-    text: "محتوای لندینگ",
-    icon: "fa-regular fa-file-lines",
+    link: "/glossary",
+    text: "گلاساری لینکسازی",
+    icon: "fa-regular fa-link",
+  },
+  {
+    type: "link",
+    link: "/banner",
+    text: "بنر صفحات فرود",
+    icon: "fa-regular fa-rectangle-ad",
   },
   {
     type: "page",
