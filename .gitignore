@@ -4,3 +4,7 @@ node_modules
 dist
 .env
 .env.local
+
+# session/ابزارهای محلی — هرگز کامیت نشوند
+.mimosa/
+**/.mimosa/

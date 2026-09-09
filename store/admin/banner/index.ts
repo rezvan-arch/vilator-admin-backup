@@ -35,8 +35,9 @@ export const bannerStore = defineStore({
       this.loading = true;
       return await this.$axios.delete(`/api/banner/destroy/${id}`);
     },
+    // شمارش کلیک بنر — روت عمومی بک‌اند (نه ادمین)؛ فراخوانی از سایت هم به همین endpoint میرود
     async incrementClicks(id: string) {
-      return await this.$axios.post(`/api/banner/${id}/click`);
+      return await this.$axios.post(`/api/public/banner/${id}/click`);
     },
   },
 });
