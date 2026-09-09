@@ -96,7 +96,9 @@ export default {
                   <th>دکمه</th>
                   <th>ترتیب</th>
                   <th>وضعیت</th>
+                  <th style="text-align: left">نمایش</th>
                   <th style="text-align: left">کلیک</th>
+                  <th style="text-align: left">CTR</th>
                   <th style="text-align: left">تنظیمات</th>
                 </tr>
               </thead>
@@ -120,7 +122,13 @@ export default {
                     </span>
                   </td>
                   <td class="text-sm">
+                    {{ item.impressions || 0 }}
+                  </td>
+                  <td class="text-sm">
                     {{ item.clicks || 0 }}
+                  </td>
+                  <td class="text-sm">
+                    {{ item.ctr != null ? `${item.ctr}٪` : "—" }}
                   </td>
                   <td class="setting">
                     <div class="actions justify-end">
