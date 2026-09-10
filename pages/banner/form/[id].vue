@@ -160,6 +160,7 @@ export default {
               <option value="landing-type-house">landing-type-house — فقط خانه</option>
               <option value="landing-type-land">landing-type-land — فقط زمین</option>
               <option value="landing-type-commercial">landing-type-commercial — فقط تجاری</option>
+              <option value="landing-bottom">landing-bottom — انتهای لیست نتایج (چند بنر فعال = چرخش A/B)</option>
             </select>
           </div>
           <div class="controls w-1/2">
