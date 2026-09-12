@@ -39,6 +39,11 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
+  // جلسه ۴۸: توضیح کمکی کنار label (آیکون ؟ با هاور) — پنل را شلوغ نمیکند
+  hint: {
+    type: String,
+    default: "",
+  },
 });
 const value = ref("");
 value.value = props.modelValue;
@@ -58,6 +63,7 @@ watch(
     :class="{ 'label-error': Object.keys(errors).length > 0 }"
   >
     {{ props.label }}
+    <FormHint v-if="props.hint" :text="props.hint" />
   </label>
   <Field
     :name="props.label"

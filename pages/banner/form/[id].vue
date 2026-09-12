@@ -1,12 +1,14 @@
 <script>
 import { bannerStore } from "~/store/admin/banner/index";
 import BannerPreview from "~/components/BannerPreview.vue";
+import FormHint from "~/components/Form/Hint.vue";
 
 // فرم مشترک ساخت/ویرایش بنر «کارت بومی» — new (بدون id) و edit/[id]
 // placement = جایگاه نمایش در سایت (فعلاً: landing برای صفحات فرود /property)
 export default {
   components: {
     BannerPreview,
+    FormHint,
   },
   setup() {
     definePageMeta({ layout: "admin" });
@@ -16,9 +18,20 @@ export default {
     const store = bannerStore();
     const route = useRoute();
 
+    // جلسه ۴۸: مستندات متغیرها — با آیکون ؟ کنار فیلدها (بدون شلوغی فرم)
+    const VARIABLES_HINT =
+      "متغیرها با مقدار همان صفحه جایگزین می‌شوند:\n" +
+      "{type} = نوع ملک (ویلا/زمین/...)\n" +
+      "{location} = شهر لندینگ (آمل/سرخرود/...)\n" +
+      "{count} = تعداد نتایج همان صفحه\n" +
+      "{page_title} = تایتل سئویی صفحه\n" +
+      "{phone} = تلفن تنظیمات سایت\n" +
+      "نمونه: قصد فروش {type} در {location} را دارید؟";
+
     return {
       store,
       route,
+      VARIABLES_HINT,
     };
   },
   data() {
@@ -152,7 +165,16 @@ export default {
 
         <div class="row">
           <div class="controls w-1/2">
-            <label>جایگاه (placement) *</label>
+            <label>
+              جایگاه (placement) *
+              <FormHint
+                text="کارت کجا نمایش داده شود؟
+landing = بین همه نتایج /property (بعد از آگهی چهارم)
+landing-type-villa و ... = فقط لندینگ همان نوع (نبودش → بنر عمومی)
+landing-bottom = انتهای لیست نتایج
+چند بنر فعال برای یک جایگاه = چرخش A/B (هر بازدیدکننده روزانه همان یکی را می‌بیند)"
+              />
+            </label>
             <select v-model="form.placement" class="w-full">
               <option value="landing">landing — همه صفحات فرود /property</option>
               <option value="landing-type-villa">landing-type-villa — فقط ویلا</option>
@@ -168,13 +190,17 @@ export default {
               v-model="form.title"
               label="تیتر کارت * — مثل: قصد فروش ملک خود را دارید؟"
               name="title"
+              :hint="VARIABLES_HINT"
             />
           </div>
         </div>
 
         <div class="row">
           <div class="controls w-full">
-            <label>توضیح کارت</label>
+            <label>
+              توضیح کارت
+              <FormHint :text="VARIABLES_HINT" />
+            </label>
             <textarea
               v-model="form.description"
               rows="3"
@@ -190,6 +216,7 @@ export default {
               v-model="form.button_text"
               label="متن دکمه — مثل: ثبت رایگان ملک"
               name="button_text"
+              hint="متغیر {type} را پشتیبانی می‌کند — مثل: ثبت رایگان {type}"
             />
           </div>
           <div class="controls w-1/2">
@@ -198,6 +225,7 @@ export default {
               label="مسیر دکمه (لینک داخلی سایت)"
               name="button_link"
               :ltr="true"
+              hint="خالی بگذاری → /sales-request (فرم فروش). پارامترهای ref/type/city خودکار اضافه می‌شوند — چیزی ننویس. لینک بیرونی باید با https شروع شود."
             />
           </div>
         </div>
@@ -209,10 +237,16 @@ export default {
               label="ترتیب نمایش (عدد کوچکتر = جلوتر — وقتی چند بنر فعال برای یک جایگاه باشد)"
               name="sort_order"
               type="number"
+              hint="وقتی چند بنر فعال برای یک جایگاه باشد، ترتیب نقش ندارد — چرخش A/B روزانه بین آنها تقسیم می‌کند"
             />
           </div>
           <div class="controls w-1/2">
-            <label>زمان شروع نمایش</label>
+            <label>
+              زمان شروع نمایش
+              <FormHint
+                text="خالی = از همین حالا. برای کمپین فصلی: شروع/پایان بگذار — بعد از پایان، کارت خودکار از سایت حذف می‌شود."
+              />
+            </label>
             <input
               v-model="form.starts_at"
               type="datetime-local"
