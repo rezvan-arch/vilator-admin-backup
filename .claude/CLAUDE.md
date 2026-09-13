@@ -146,4 +146,9 @@
 - ویرایش خدمت «طراحی ویلای مدرن»: ۲ پکیج + FAQ prefill و ذخیره موفق ✅
 - لیست پروژه‌ها/لیدها: دیتای Seeder نمایش درست (قیمت با toLocaleString فارسی، لیبل فارسی وضعیت‌ها) ✅
 - تغییر وضعیت لید inline: «جدید» → «تبدیل شد» → توست + تأیید در DB ✅
-- رندر: article/new، construction/services/new، construction/projects/new و edit همگی سالم (mainLen ~۲۶-۳۰KB، CKEditor ساخته می‌شود) ✅
+
+## مدیریت بنرهای صفحات فرود (/banner — جلسه ۴۸، 9/9)
+- **صفحات:** `pages/banner/index.vue` (لیست: placement/تیتر/دکمه/ترتیب/وضعیت/شمارش کلیک + حذف) + `pages/banner/form/[id].vue` (فرم با **پیشنمایش زنده** `components/BannerPreview.vue` + select جایگاه + زمانبندی starts_at/ends_at). منو در گروه «صفحه فرود». استور: `store/admin/banner/index.ts` → `/api/banner/*` بک‌اند.
+- **جایگاهها (placement):** `landing` (همه لندینگهای /property) + `landing-type-{villa|apartment|house|land|commercial}` (فقط آن نوع — سایت خودش fallback به عمومی میزند اگر بنر نوعی نباشد). برای تارگتینگ شهری فعلاً جایگاه جدا نداریم — متن با `{type}`/`{location}` شخصی میشود (سایت جایگزین میکند).
+- **فیکس جلسه ۴۸:** `incrementClicks` به endpoint عمومی درست `/api/public/banner/{id}/click` رفت (قبلاً `/api/banner/{id}/click` → 404؛ فراخوانی واقعی کلیک از سایت میآید).
+- ⚠️ درس کامیت: `git add -A` وقتی کار سشن دیگری (مثل glossary) در working tree هست، آن را هم میبلعد — قبل از add، status مرور شود و فقط فایلهای سشن خود stage شود.

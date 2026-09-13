@@ -46,6 +46,8 @@ export default {
       },
       previewOpen: false,
       scanOpen: false,
+      gscOpen: false,
+      gscDays: 90,
     };
   },
   created() {
@@ -53,8 +55,19 @@ export default {
       this.currentPage = Number(this.$route.query.page);
     }
     this.getLatest();
+    this.loadClicks();
   },
   methods: {
+    async loadClicks() {
+      try {
+        await this.store.getClickStats(30);
+      } catch (err) {
+        // آمار کلیک اختیاری است — خطا لیست را نمیشکند
+      }
+    },
+    clicksOf(keyword) {
+      return this.store.clickStats?.clicks?.[keyword] ?? 0;
+    },
     categoryLabel(value) {
       const found = this.categories.find((c) => c.value === value);
       return found ? found.label : value || "—";
@@ -160,6 +173,40 @@ export default {
         this.$toast("پیشنمایش با خطا مواجه شد!", "error", 2500);
       }
     },
+    async runGsc() {
+      this.gscOpen = true;
+      const res = await this.store.getGscSuggestions(this.gscDays);
+      if (res && res.status == "success" && this.store.gscResult) {
+        const r = this.store.gscResult;
+        const total =
+          (r.brand_city?.length || 0) +
+          (r.mismatch?.length || 0) +
+          (r.opportunity?.length || 0);
+        this.$toast(
+          `${total} پیشنهاد از ${r.queries_analyzed} کوئری واقعی گوگل`,
+          "success",
+          3000
+        );
+      } else if (this.store.gscError) {
+        this.$toast(this.store.gscError, "error", 4000);
+      }
+    },
+    gscRows() {
+      const r = this.store.gscResult;
+      if (!r) return [];
+      const rows = [];
+      for (const item of r.brand_city || []) rows.push({ ...item, type: "برند+شهر" });
+      for (const item of r.mismatch || []) rows.push({ ...item, type: "مقصد غلط" });
+      for (const item of r.opportunity || []) rows.push({ ...item, type: "فرصت صفحه ۲" });
+      return rows;
+    },
+    addSuggestion(row) {
+      const query = new URLSearchParams({
+        keyword: row.keyword,
+        ...(row.target_url ? { target_url: row.target_url } : {}),
+      }).toString();
+      this.$router.push(`/glossary/form/new?${query}`);
+    },
   },
 };
 </script>
@@ -259,6 +306,7 @@ export default {
                   <th>مقصد</th>
                   <th>دسته</th>
                   <th>اولویت</th>
+                  <th>کلیک ۳۰ روز</th>
                   <th>وضعیت</th>
                   <th style="text-align: left">تنظیمات</th>
                 </tr>
@@ -278,6 +326,11 @@ export default {
                       :class="item.priority >= 2 ? 'badge-warning' : 'badge-secondary'"
                     >
                       {{ priorities[item.priority] ?? "متوسط" }}
+                    </span>
+                  </td>
+                  <td>
+                    <span :class="clicksOf(item.keyword) > 0 ? 'font-bold text-green-600' : 'opacity-50'">
+                      {{ clicksOf(item.keyword) }}
                     </span>
                   </td>
                   <td>
@@ -400,6 +453,96 @@ export default {
         </div>
       </div>
     </div>
+
+    <!-- پیشنهاد واژه از Google Search Console -->
+    <div class="card mt-4">
+      <div class="card__header cursor-pointer" @click="gscOpen = !gscOpen">
+        <h4 class="heading__title">پیشنهاد واژه از گوگل (Search Console)</h4>
+        <i
+          class="fa-regular"
+          :class="gscOpen ? 'fa-chevron-up' : 'fa-chevron-down'"
+        ></i>
+      </div>
+      <div v-if="gscOpen" class="card__body">
+        <p class="text-xs opacity-60 mb-3">
+          سه سبد: «برند+شهر» (تقاضای شهر با نام برند) | «مقصد غلط» (کوئری شهر-دار که به صفحه بدون آن شهر میرسد) |
+          «فرصت صفحه ۲» (position ۸ تا ۲۰ — با لینک داخلی ارزان به صفحه ۱ میآید). برای هر ردیف، «افزودن» شما را با
+          واژه و مقصد پیشنهادی به فرم میبرد تا بازبینی و ثبت کنید.
+        </p>
+        <div class="filters__row">
+          <select v-model="gscDays" class="w-40">
+            <option :value="30">۳۰ روز اخیر</option>
+            <option :value="90">۹۰ روز اخیر</option>
+            <option :value="180">۶ ماه اخیر</option>
+          </select>
+          <button
+            class="btn btn-primary"
+            :disabled="store.gscLoading"
+            @click="runGsc()"
+          >
+            <i class="fa-regular fa-magnifying-glass"></i>
+            {{ store.gscLoading ? "درحال دریافت از گوگل..." : "دریافت پیشنهادها" }}
+          </button>
+        </div>
+
+        <div
+          v-if="store.gscError"
+          class="gsc__notice"
+        >
+          <b>دسترسی به GSC برقرار نیست:</b>
+          <span>{{ store.gscError }}</span>
+        </div>
+
+        <table v-if="gscRows().length" class="w-full text-sm">
+          <thead>
+            <tr>
+              <th>واژه پیشنهادی</th>
+              <th>نوع</th>
+              <th>کوئری منبع</th>
+              <th>کلیک</th>
+              <th>نمایش</th>
+              <th>position</th>
+              <th>مقصد پیشنهادی</th>
+              <th>عمل</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="(row, i) in gscRows()" :key="`gsc-${i}`">
+              <td class="font-bold">{{ row.keyword }}</td>
+              <td>
+                <span
+                  class="badge"
+                  :class="row.type === 'برند+شهر' ? 'badge-success' : row.type === 'مقصد غلط' ? 'badge-warning' : 'badge-secondary'"
+                >
+                  {{ row.type }}
+                </span>
+              </td>
+              <td class="opacity-70 text-xs">{{ row.source_query }}</td>
+              <td>{{ row.clicks }}</td>
+              <td>{{ row.impressions }}</td>
+              <td dir="ltr">{{ row.position }}</td>
+              <td class="font-mono text-xs" dir="ltr">
+                {{ row.target_url || "— انتخاب با شما —" }}
+              </td>
+              <td>
+                <nuxt-link
+                  :to="`/glossary/form/new?${'keyword=' + encodeURIComponent(row.keyword) + (row.target_url ? '&target_url=' + encodeURIComponent(row.target_url) : '')}`"
+                  class="btn btn-primary py-1 px-3 text-xs"
+                >
+                  افزودن
+                </nuxt-link>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        <p
+          v-else-if="store.gscResult && !store.gscError"
+          class="text-sm opacity-60"
+        >
+          پیشنهاد جدیدی یافت نشد — با افزایش بازه زمانی دوباره امتحان کنید (دیتای GSC هر ۶ ساعت کش میشود).
+        </p>
+      </div>
+    </div>
   </section>
 
   <transition name="fade">
@@ -474,5 +617,12 @@ export default {
       text-decoration-style: dotted;
     }
   }
+}
+
+.gsc__notice {
+  @apply p-3 rounded-lg text-sm mb-3;
+  background-color: #fffbeb;
+  border: 1px solid #fde68a;
+  color: #92400e;
 }
 </style>

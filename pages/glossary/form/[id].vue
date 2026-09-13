@@ -25,6 +25,7 @@ export default {
         description: "",
         category: "other",
         priority: 1,
+        anchor_variants: [],
         is_active: true,
       },
       categories: [
@@ -56,6 +57,14 @@ export default {
       this.isEdit = true;
       this.singleId = this.route.params.id;
       this.loadSingle();
+    } else {
+      // موج GSC: پیشنهادها با ?keyword=&target_url= به فرم میان (ادمین بازبینی میکند و ثبت)
+      if (this.route.query.keyword) {
+        this.form.keyword = String(this.route.query.keyword);
+      }
+      if (this.route.query.target_url) {
+        this.form.target_url = String(this.route.query.target_url);
+      }
     }
     this.loadSuggestions();
   },
@@ -72,6 +81,7 @@ export default {
               description: res.data.description ?? "",
               category: res.data.category ?? "other",
               priority: res.data.priority ?? 1,
+              anchor_variants: (res.data.anchor_variants ?? []).map((v) => v),
               is_active: res.data.is_active ?? true,
             };
           }
@@ -97,6 +107,12 @@ export default {
         select.value = "";
       }
     },
+    addVariant() {
+      if (this.form.anchor_variants.length < 5) this.form.anchor_variants.push("");
+    },
+    removeVariant(i) {
+      this.form.anchor_variants.splice(i, 1);
+    },
     async submit() {
       if (this.form.keyword.trim() == "") {
         this.$toast("واژه (کلیدواژه) وارد نشده است!", "error", 2000);
@@ -114,6 +130,9 @@ export default {
         description: this.form.description.trim(),
         category: this.form.category,
         priority: Number(this.form.priority),
+        anchor_variants: this.form.anchor_variants
+          .map((v) => (v || "").trim())
+          .filter((v) => v !== ""),
         is_active: this.form.is_active,
       };
 
@@ -236,6 +255,46 @@ export default {
                 {{ p.label }}
               </option>
             </select>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="controls w-full">
+            <div class="flex items-center justify-between mb-2">
+              <label>وریشنهای متن انکر (حداکثر ۵ — اختیاری)</label>
+              <button
+                type="button"
+                class="btn btn-primary py-1 px-3 text-sm"
+                :disabled="form.anchor_variants.length >= 5"
+                @click="addVariant()"
+              >
+                <i class="fa-regular fa-plus"></i> وریشن
+              </button>
+            </div>
+            <div
+              v-for="(v, i) in form.anchor_variants"
+              :key="`variant-${i}`"
+              class="flex items-center gap-2 mb-2"
+            >
+              <input
+                v-model="form.anchor_variants[i]"
+                type="text"
+                class="w-full"
+                placeholder="متن جایگزین لینک در برخی صفحات — مثلاً: خرید ویلا در شمال"
+              />
+              <button
+                type="button"
+                class="btn btn-danger py-1 px-2"
+                @click="removeVariant(i)"
+                title="حذف وریشن"
+              >
+                <i class="fa-regular fa-trash"></i>
+              </button>
+            </div>
+            <p v-if="form.anchor_variants.length == 0" class="text-xs opacity-60">
+              ثبت نشده — لینک همیشه با متن واقعی واژه در صفحه ساخته میشود. با وریشن، هر صفحه بهطور
+              پایدار یکی از این متنها را برای لینک انتخاب میکند (تنوع طبیعی سئو).
+            </p>
           </div>
         </div>
 

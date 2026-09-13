@@ -15,6 +15,10 @@ export const glossaryStore = defineStore({
       suggestions: null as any,
       previewResult: null as any,
       previewing: false,
+      gscResult: null as any,
+      gscError: "",
+      gscLoading: false,
+      clickStats: null as any,
     };
   },
   actions: {
@@ -68,6 +72,36 @@ export const glossaryStore = defineStore({
         return res;
       } finally {
         this.previewing = false;
+      }
+    },
+    async getClickStats(days = 30) {
+      const res = await this.$axios.get(`/api/glossary/click-stats`, {
+        params: { days },
+      });
+      this.clickStats = res.status == "success" ? res.data : null;
+      return this.clickStats;
+    },
+    async getGscSuggestions(days = 90) {
+      this.gscLoading = true;
+      this.gscError = "";
+      try {
+        const res = await this.$axios.get(`/api/glossary/gsc-suggestions`, {
+          params: { days },
+        });
+        if (res.status == "success") {
+          this.gscResult = res.data;
+        } else {
+          this.gscResult = null;
+          this.gscError = res.message ?? "دریافت پیشنهادها ناموفق بود.";
+        }
+        return res;
+      } catch (err: any) {
+        this.gscResult = null;
+        this.gscError =
+          err?.response?.data?.message ?? "دریافت پیشنهادها ناموفق بود.";
+        return null;
+      } finally {
+        this.gscLoading = false;
       }
     },
   },
