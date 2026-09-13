@@ -7,6 +7,8 @@ export const trackStore = defineStore({
     return {
       loading: true,
       summary: null as any,
+      bannerLoading: false,
+      bannerSummary: null as any,
       days: 30,
     };
   },
@@ -24,6 +26,22 @@ export const trackStore = defineStore({
         })
         .finally(() => {
           this.loading = false;
+        });
+    },
+    // جلسه ۴۸: گزارش بنرها (جایگاه/متن × نمایش/کلیک/CTR/لید) — بک‌اند:
+    // GET /api/banner/track-summary (تجمیع track_events)
+    async getBannerSummary(days: number = 30) {
+      this.bannerLoading = true;
+      await this.$axios
+        .get(`/api/banner/track-summary`, { params: { days } })
+        .then((res: any) => {
+          this.bannerSummary = res.data?.data ?? null;
+        })
+        .catch(() => {
+          this.bannerSummary = null;
+        })
+        .finally(() => {
+          this.bannerLoading = false;
         });
     },
   },

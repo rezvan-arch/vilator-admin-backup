@@ -26,17 +26,30 @@ const eventTitles = {
 
 onMounted(() => {
   trackStore.getSummary(trackStore.days);
+  trackStore.getBannerSummary(trackStore.days);
 });
 
 const perEvent = computed(() => trackStore.summary?.per_event ?? {});
 const topProperties = computed(() => trackStore.summary?.top_properties ?? []);
 const topCities = computed(() => trackStore.summary?.top_cities ?? []);
 
+// جلسه ۴۸: گزارش بنرها (کارت بومی) — جایگاه × نمایش/کلیک/CTR/لید + سطح متن (A/B)
+const bannerPlacements = computed(
+  () => trackStore.bannerSummary?.per_placement ?? []
+);
+const bannerVariants = computed(
+  () => trackStore.bannerSummary?.per_banner ?? []
+);
+
 function applyDays() {
   trackStore.getSummary(trackStore.days);
+  trackStore.getBannerSummary(trackStore.days);
 }
 function formatNumber(v) {
   return Number(v || 0).toLocaleString("fa-IR");
+}
+function formatRate(v) {
+  return v == null ? "—" : `${v}٪`;
 }
 </script>
 <template>
@@ -120,6 +133,77 @@ function formatNumber(v) {
                 </tr>
               </tbody>
             </table>
+          </div>
+
+          <!-- جلسه ۴۸: گزارش بنرهای «کارت بومی» -->
+          <div
+            v-if="!trackStore.bannerLoading && bannerPlacements.length > 0"
+            class="mt-8"
+          >
+            <h5 class="font-bold mb-2">گزارش بنرها (کارت بومی صفحات فرود)</h5>
+            <p class="text-xs text-gray-400 mb-3">
+              لید = ثبت فرم فروشِ از طریق لینک بنر (منسوب به جایگاه) | CTR = کلیک ÷ نمایش | نمایش = کارت حداقل ۱ ثانیه دیده شده
+            </p>
+            <table>
+              <thead>
+                <tr>
+                  <th>جایگاه</th>
+                  <th>نمایش</th>
+                  <th>کلیک</th>
+                  <th>CTR</th>
+                  <th>لید</th>
+                  <th>لید از هر کلیک</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="(item, index) in bannerPlacements" :key="index">
+                  <td class="font-mono text-xs" dir="ltr">
+                    {{ item.placement }}
+                  </td>
+                  <td dir="ltr">{{ formatNumber(item.impressions) }}</td>
+                  <td dir="ltr">{{ formatNumber(item.clicks) }}</td>
+                  <td dir="ltr">{{ formatRate(item.ctr) }}</td>
+                  <td dir="ltr">{{ formatNumber(item.leads) }}</td>
+                  <td dir="ltr">{{ formatRate(item.lead_rate) }}</td>
+                </tr>
+              </tbody>
+            </table>
+
+            <!-- سطح متن بنر — مقایسه واریانتهای A/B -->
+            <div v-if="bannerVariants.length > 0" class="mt-6">
+              <h6 class="font-bold mb-2 text-sm">به تفکیک متن بنر (مقایسه A/B)</h6>
+              <table>
+                <thead>
+                  <tr>
+                    <th>تیتر بنر</th>
+                    <th>جایگاه</th>
+                    <th>وضعیت</th>
+                    <th>نمایش</th>
+                    <th>کلیک</th>
+                    <th>CTR</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="(item, index) in bannerVariants" :key="index">
+                    <td>{{ item.title }}</td>
+                    <td class="font-mono text-xs" dir="ltr">
+                      {{ item.placement }}
+                    </td>
+                    <td>
+                      <span
+                        class="badge"
+                        :class="item.is_active ? 'badge-success' : 'badge-secondary'"
+                      >
+                        {{ item.is_active ? "فعال" : "غیرفعال" }}
+                      </span>
+                    </td>
+                    <td dir="ltr">{{ formatNumber(item.impressions) }}</td>
+                    <td dir="ltr">{{ formatNumber(item.clicks) }}</td>
+                    <td dir="ltr">{{ formatRate(item.ctr) }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
         <div v-else class="py-6 text-center">
