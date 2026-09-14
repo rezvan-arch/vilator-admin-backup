@@ -270,6 +270,11 @@ export default {
           propertyStore.properties.property_status = "sell";
         }
 
+        // جلسه ۴۸: وضعیت معامله — پیشفرض فعال؛ گزینهها با توضیح از بک‌اند
+        if (propertyStore.properties.sale_status == null) {
+          propertyStore.properties.sale_status = "active";
+        }
+
         // جلسه ۱۷: بارگذاری گزینه‌های لوکیشن با ۲ رکوئست تجمیعی
         // (قبلاً به‌ازای هر سطح انتخاب‌شده، رکوئست جداگانه برای همه‌ی سطوح زیرش می‌خورد — ~۴۲ رکوئست)
         locationStore.selectOptions = {};
@@ -494,6 +499,44 @@ export default {
       }
     );
 
+    // جلسه ۴۸: وضعیت معامله (فعال/رزرو/فروخته) — گزینهها با توضیح فارسی از بک‌اند
+    const saleStatusOption = ref([]);
+    const reserveCopied = ref(false);
+    if (import.meta.client) {
+      propertyStore
+        .$axios.get(`/api/property/sale-status/options`)
+        .then((optRes) => {
+          if (optRes.data?.status == "success") {
+            saleStatusOption.value = optRes.data.data;
+          }
+        })
+        .catch(() => {});
+    }
+    const saleStatusDescription = computed(() => {
+      const found = saleStatusOption.value.find(
+        (o) => o.value == propertyStore.properties.sale_status
+      );
+      return found?.description || "";
+    });
+    // سناریوی رزرو (خواسته کاربر): ادمین وضعیت را رزرو میکند و این پیام آماده
+    // با لینک صفحه ملک را برای مشتری میفرستد
+    const reserveMessage = computed(() => {
+      const p = propertyStore.properties;
+      if (p.sale_status != "reserved") return "";
+      const url = `https://vilator.com/property/${p.slug}`;
+      return `مشتری گرامی، کد ${p.property_code} با شروع مذاکره یا پرداخت بیعانه به حالت رزرو برای شما درآمد و از بازار خارج شد.\nلینک ملک:\n${url}`;
+    });
+    function copyReserveMessage() {
+      if (!reserveMessage.value) return;
+      navigator.clipboard
+        .writeText(reserveMessage.value)
+        .then(() => {
+          reserveCopied.value = true;
+          setTimeout(() => (reserveCopied.value = false), 2000);
+        })
+        .catch(() => {});
+    }
+
     return {
       adminStore,
       propertyStore,
@@ -510,6 +553,11 @@ export default {
       locationTypeOptions,
       changeLocation,
       resetAddress,
+      saleStatusOption,
+      saleStatusDescription,
+      reserveMessage,
+      reserveCopied,
+      copyReserveMessage,
     };
   },
   methods: {
@@ -3003,6 +3051,49 @@ export default {
                 </template>
               </v-select>
               <FormInputShowError errorKey="status" />
+            </div>
+            <!-- جلسه ۴۸: وضعیت معامله (فعال/رزرو/فروخته) — مستقل از وضعیت انتشار -->
+            <div class="controls w-1/3">
+              <label for="sale_status">وضعیت معامله</label>
+              <v-select
+                v-model="propertyStore.properties.sale_status"
+                id="sale_status"
+                :options="saleStatusOption"
+                :reduce="(option) => option.value"
+                :clearable="false"
+                autocomplete="off"
+              >
+                <template #no-options>
+                  <p class="text-sm opacity-60 text-center">
+                    گزینه مورد نظر پیدا نشد
+                  </p>
+                </template>
+              </v-select>
+              <p
+                v-if="saleStatusDescription"
+                class="text-xs opacity-60 mt-1 leading-5"
+              >
+                {{ saleStatusDescription }}
+              </p>
+              <!-- سناریوی رزرو (خواسته کاربر): پیام آماده + لینک صفحه ملک برای
+                   فرستادن به مشتری حین مذاکره/بیعانه -->
+              <div
+                v-if="propertyStore.properties.sale_status === 'reserved'"
+                class="mt-3 p-3 rounded-lg border border-amber-300 bg-amber-50 text-right"
+              >
+                <p
+                  class="text-xs leading-6 whitespace-pre-line text-gray-700"
+                  >{{ reserveMessage }}</p
+                >
+                <button
+                  type="button"
+                  class="mt-2 text-xs font-bold border border-amber-400 text-amber-600 hover:bg-amber-400 hover:text-white rounded-lg px-3 py-1.5 transition"
+                  @click="copyReserveMessage"
+                >
+                  <i class="fa-regular fa-copy ml-1"></i>
+                  {{ reserveCopied ? "کپی شد ✓" : "کپی پیام رزرو برای مشتری" }}
+                </button>
+              </div>
             </div>
           </div>
         </div>

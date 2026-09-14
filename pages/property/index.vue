@@ -38,6 +38,26 @@ const showFilter = ref(false);
 const filterBody = ref(null);
 const categoriesList = ref([]);
 const debounce = ref(null);
+
+// جلسه ۴۸: تغییر سریع وضعیت معامله از لیست — سناریوی رزرو حین مذاکره:
+// ادمین وضعیت را رزرو میکند، لینک صفحه ملک را با پیام آماده برای مشتری میفرستد
+async function changeSaleStatus(item, value) {
+  if ((item.sale_status || "active") === value) return;
+  try {
+    const res = await propertyStore.$axios.post(
+      `/api/property/change/sale-status`,
+      { id: item.id, sale_status: value }
+    );
+    if (res.data?.status == "success") {
+      item.sale_status = value;
+      $toast(res.data.message || "وضعیت معامله تغییر کرد", "success", 2500);
+    } else {
+      $toast("تغییر وضعیت ناموفق بود", "error", 2500);
+    }
+  } catch {
+    $toast("خطا در تغییر وضعیت معامله", "error", 2500);
+  }
+}
 const option = {
   locale: "fa-IR",
   currency: "IRR",
@@ -760,6 +780,7 @@ function submitPropertyCode(){
                   <th>بازدید</th>
                   <th>قیمت</th>
                   <th>وضعیت</th>
+                  <th>معامله</th>
                   <th>تنظیمات</th>
                 </tr>
               </thead>
@@ -821,6 +842,27 @@ function submitPropertyCode(){
                         پیش نویس
                       </span>
                     </div>
+                  </td>
+                  <!-- جلسه ۴۸: وضعیت معامله — تغییر سریع (سناریوی رزرو حین مذاکره) -->
+                  <td>
+                    <select
+                      class="text-xs border rounded px-1 py-0.5"
+                      :value="item.sale_status || 'active'"
+                      :style="
+                        item.sale_status === 'reserved'
+                          ? 'color:#b45309'
+                          : item.sale_status === 'sold'
+                            ? 'color:#b91c1c'
+                            : ''
+                      "
+                      @change="
+                        changeSaleStatus(item, $event.target.value)
+                      "
+                    >
+                      <option value="active">در بازار</option>
+                      <option value="reserved">رزرو شده</option>
+                      <option value="sold">فروخته شد</option>
+                    </select>
                   </td>
                   <td class="setting">
                     <div class="actions">
