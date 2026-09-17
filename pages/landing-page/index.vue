@@ -26,6 +26,8 @@ export default {
       formulaModal: false,
       bulkLoading: false,
       generateLoading: "",
+      // جلسه ۵۲ — تب مودال کاندیدها: seed (نوع×مکان) یا جستجوی واقعی کاربران
+      candidatesTab: "seed",
     };
   },
   created() {
@@ -34,6 +36,8 @@ export default {
     }
 
     this.getLatest();
+    // جلسه ۵۲ — متریک واقعی ۷روزه (سبک؛ جدا از لیست)
+    this.landingPage.getMetrics();
   },
   methods: {
     async getLatest() {
@@ -129,6 +133,7 @@ export default {
       this.landingPage.getCandidates().catch(() => {
         this.$toast("دریافت کاندیدها با خطا مواجه شد!", "error", 2000);
       });
+      this.landingPage.getRealCandidates().catch(() => {});
     },
     openFormula() {
       this.formulaModal = true;
@@ -185,6 +190,49 @@ export default {
       const faqs = (item.faqs || []).length;
       return `${intro} پاراگراف · ${faqs} پرسش`;
     },
+    // جلسه ۵۲ — متریک ۷روزهی این ردیف از نقشه metrics (کلید = path نرمال)
+    metricFor(item, key) {
+      const path = (item.path || item.query_url || "").replace(/\/+$/, "");
+      const metric = this.landingPage.metrics[path];
+      return metric ? metric[key] : null;
+    },
+    toggleIndex(item) {
+      if (this.landingPage.togglingId) return;
+      this.landingPage
+        .toggleIndex(item.id)
+        .then((res) => {
+          if (res.status == "success") {
+            item.is_indexable = res.data.is_indexable;
+            this.$toast(
+              item.is_indexable
+                ? "لندینگ ایندکس شد و کشها تازه شد."
+                : "لندینگ از ایندکس خارج شد.",
+              "success",
+              2000
+            );
+          }
+        })
+        .catch(() => this.$toast("تغییر ایندکس با خطا مواجه شد!", "error", 2500));
+    },
+    quickAddReal(candidate) {
+      this.landingPage
+        .quickAdd(candidate.path)
+        .then((res) => {
+          if (res.status == "success") {
+            this.$toast(`لندینگ ${candidate.path} اضافه شد.`, "success", 2500);
+            this.landingPage.realCandidates =
+              this.landingPage.realCandidates.filter(
+                (item) => item.path != candidate.path
+              );
+            this.getLatest();
+          }
+        })
+        .catch((err) => {
+          const msg =
+            err?.response?.data?.message ?? "افزودن لندینگ با خطا مواجه شد!";
+          this.$toast(msg, "error", 2500);
+        });
+    },
   },
 };
 </script>
@@ -224,6 +272,15 @@ export default {
                     <th>نوع تایپ</th>
                     <th>لوکیشن</th>
                     <th>تعداد ملک</th>
+                    <th title="جستجوهای واقعی کاربران در ۷ روز گذشته (از آمار سایت)">
+                      بازدید ۷روزه
+                    </th>
+                    <th title="رویدادهای تعاملی (مشاهده ملک/تماس واتساپ) در همین لندینگ و زیرصفحههایش — ۷ روز">
+                      تعامل ۷روزه
+                    </th>
+                    <th title="تعامل تقسیم بر بازدید — کاندید محتواسازی و بهینهسازی">
+                      تبدیل
+                    </th>
                     <th>محتوا</th>
                     <th>منبع</th>
                     <th>ایندکس</th>
@@ -295,6 +352,42 @@ export default {
                       </template>
                       <template v-else> - </template>
                     </td>
+                    <!-- جلسه ۵۲ — متریک واقعی ۷روزه از دیتای کاربران -->
+                    <td>
+                      <span
+                        v-if="metricFor(item, 'views_7d') != null"
+                        :class="
+                          metricFor(item, 'views_7d') > 0
+                            ? 'badge badge-pill badge-success'
+                            : 'badge badge-pill badge-light'
+                        "
+                      >
+                        {{ metricFor(item, "views_7d") }}
+                      </span>
+                      <template v-else> - </template>
+                    </td>
+                    <td>
+                      <span
+                        v-if="metricFor(item, 'engagements_7d') != null"
+                        :class="
+                          metricFor(item, 'engagements_7d') > 0
+                            ? 'badge badge-pill badge-info'
+                            : 'badge badge-pill badge-light'
+                        "
+                      >
+                        {{ metricFor(item, "engagements_7d") }}
+                      </span>
+                      <template v-else> - </template>
+                    </td>
+                    <td>
+                      <span
+                        v-if="metricFor(item, 'conversion_7d') != null"
+                        class="font-mono text-xs"
+                      >
+                        {{ metricFor(item, "conversion_7d") }}٪
+                      </span>
+                      <template v-else> - </template>
+                    </td>
                     <td class="whitespace-nowrap text-xs">
                       {{ contentSummary(item) }}
                     </td>
@@ -310,15 +403,38 @@ export default {
                       </span>
                     </td>
                     <td>
-                      <span
-                        v-if="item.is_indexable"
-                        class="badge badge-pill badge-success"
+                      <button
+                        :disabled="landingPage.togglingId == item.id"
+                        title="کلیک: تغییر ایندکس‌پذیری (کشها خودکار تازه میشوند)"
+                        @click="toggleIndex(item)"
                       >
-                        ایندکسشده
-                      </span>
-                      <span v-else class="badge badge-pill badge-warning">
-                        بدون ایندکس
-                      </span>
+                        <span
+                          v-if="item.is_indexable"
+                          class="badge badge-pill badge-success"
+                        >
+                          <template
+                            v-if="landingPage.togglingId == item.id"
+                          >
+                            <i
+                              class="fa-solid fa-spinner text-xl animate-spin"
+                            ></i>
+                          </template>
+                          <template v-else>ایندکسشده</template>
+                        </span>
+                        <span
+                          v-else
+                          class="badge badge-pill badge-warning"
+                        >
+                          <template
+                            v-if="landingPage.togglingId == item.id"
+                          >
+                            <i
+                              class="fa-solid fa-spinner text-xl animate-spin"
+                            ></i>
+                          </template>
+                          <template v-else>بدون ایندکس</template>
+                        </span>
+                      </button>
                     </td>
                     <td>
                       <div class="flex gap-1">
@@ -392,12 +508,41 @@ export default {
         <div class="popup_base popup_wide">
           <div class="popup_heading">
             <h5 class="font-bold mb-1">کاندیدهای صفحه فرود</h5>
-            <p class="text-xs opacity-70">
-              ترکیبهای «نوع + مکان» با بیشترین تعداد ملک — مسیر بر اساس URL
-              استاندارد سایت ساخته میشود.
+            <div class="flex gap-2 mt-2">
+              <button
+                class="btn py-1 px-3 text-sm"
+                :class="candidatesTab == 'seed' ? 'btn-primary' : 'btn-elevated'"
+                @click="candidatesTab = 'seed'"
+              >
+                نوع × مکان (seed)
+              </button>
+              <button
+                class="btn py-1 px-3 text-sm"
+                :class="
+                  candidatesTab == 'real' ? 'btn-primary' : 'btn-elevated'
+                "
+                @click="candidatesTab = 'real'"
+              >
+                جستجوی واقعی کاربران
+                <span
+                  v-if="landingPage.realCandidates.length"
+                  class="badge badge-pill badge-warning mr-1"
+                >
+                  {{ landingPage.realCandidates.length }}
+                </span>
+              </button>
+            </div>
+            <p class="text-xs opacity-70 mt-2">
+              {{
+                candidatesTab == "seed"
+                  ? "ترکیبهای «نوع + مکان» با بیشترین تعداد ملک — مسیر بر اساس URL استاندارد سایت ساخته میشود."
+                  : "پرتکرارترین جستجوهای واقعی کاربران (۳۰ روز) که هنوز لندینگ اختصاصی ندارند و نتیجهی کافی هم دارند — با یک کلیک لندینگشان ساخته میشود."
+              }}
             </p>
           </div>
-          <div class="popup_body popup_body_block">
+
+          <!-- تب seed (نوع×مکان) -->
+          <div v-if="candidatesTab == 'seed'" class="popup_body popup_body_block">
             <div v-if="!landingPage.candidatesLoading" class="table">
               <div v-if="landingPage.candidates.length > 0">
                 <table>
@@ -465,8 +610,79 @@ export default {
               <p>درحال بارگذاری اطلاعات...</p>
             </div>
           </div>
+
+          <!-- تب جستجوی واقعی کاربران (جلسه ۵۲ — الگوی پنل دیار) -->
+          <div v-else class="popup_body popup_body_block">
+            <div v-if="!landingPage.realCandidatesLoading" class="table">
+              <div v-if="landingPage.realCandidates.length > 0">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>جستجوی کاربران (۳۰ روز)</th>
+                      <th>تعداد ملک فعلی</th>
+                      <th>مسیر پیشنهادی</th>
+                      <th style="text-align: left">تنظیمات</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr
+                      v-for="(candidate, index) in landingPage.realCandidates"
+                      :key="`real-${index}`"
+                    >
+                      <td>
+                        <span class="badge badge-pill badge-success">
+                          {{ candidate.views_30d }} بازدید
+                        </span>
+                      </td>
+                      <td>{{ candidate.property_count }}</td>
+                      <td class="c_ellipsis">
+                        <span
+                          class="font-mono text-xs"
+                          dir="ltr"
+                          :title="candidate.path"
+                        >
+                          {{ candidate.path }}
+                        </span>
+                      </td>
+                      <td class="setting">
+                        <div class="actions justify-end">
+                          <button
+                            class="btn btn-success py-1 px-3 text-sm"
+                            :disabled="landingPage.quickAdding == candidate.path"
+                            @click="quickAddReal(candidate)"
+                          >
+                            <template
+                              v-if="landingPage.quickAdding == candidate.path"
+                            >
+                              <i
+                                class="fa-solid fa-spinner text-white text-xl animate-spin"
+                              ></i>
+                            </template>
+                            <template v-else>
+                              <i class="fa-regular fa-plus"></i> افزودن
+                            </template>
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+              <div v-else class="empty__list">
+                <p class="mb-1">
+                  کاندیدی نیست — پوشش لندینگهای فعلی از جستجوهای واقعی کاربران
+                  کامل است! 🎉
+                </p>
+              </div>
+            </div>
+            <div v-else class="empty__list">
+              <p>درحال بارگذاری اطلاعات...</p>
+            </div>
+          </div>
+
           <div class="popup_footer">
             <button
+              v-if="candidatesTab == 'seed'"
               class="btn btn-success ml-2"
               :disabled="bulkLoading || landingPage.candidates.length == 0"
               @click="generateAll"

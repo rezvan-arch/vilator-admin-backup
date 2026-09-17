@@ -22,6 +22,13 @@ export const landingPage = defineStore({
       formulaSaving: false,
       // کاندید انتخابشده در مودال کاندیدها — فرم «ساخت صفحه فرود» آن را پیش‌پر می‌کند
       prefill: null as any,
+      // جلسه ۵۲ — هوشمندی پنل (الگوی دیار): متریک واقعی + کاندید جستجوی واقعی
+      metrics: {} as any,
+      metricsLoading: false,
+      realCandidates: [] as any,
+      realCandidatesLoading: false,
+      quickAdding: "",
+      togglingId: "",
     };
   },
   actions: {
@@ -170,6 +177,68 @@ export const landingPage = defineStore({
         })
         .catch((err: any) => {
           this.formulaSaving = false;
+          return Promise.reject(err);
+        });
+    },
+    // جلسه ۵۲ — متریک واقعی ۷روزه لندینگها (بازدید/تعامل/تبدیل) از دیتای واقعی کاربران
+    async getMetrics() {
+      this.metricsLoading = true;
+      return await this.$axios
+        .get(`/api/landing-page/metrics`, { params: { days: 7 } })
+        .then((res: any) => {
+          if (res.status == "success") {
+            this.metrics = res.data ?? {};
+          }
+          this.metricsLoading = false;
+          return res;
+        })
+        .catch(() => {
+          this.metricsLoading = false;
+        });
+    },
+    // کاندیدهای «جستجوی واقعی کاربران» — پرتکرارترین جستجوهای بدون لندینگ
+    async getRealCandidates(params: any = {}) {
+      this.realCandidatesLoading = true;
+      return await this.$axios
+        .get(`/api/landing-page/real-candidates`, {
+          params: { days: 30, min_views: 3, limit: 10, ...params },
+        })
+        .then((res: any) => {
+          if (res.status == "success") {
+            this.realCandidates = res.data.candidates ?? [];
+          }
+          this.realCandidatesLoading = false;
+          return res;
+        })
+        .catch(() => {
+          this.realCandidatesLoading = false;
+        });
+    },
+    // افزودن سریع کاندید واقعی به لندینگها (auto + بامپ/purge خودکار بک‌اند)
+    async quickAdd(path: string) {
+      this.quickAdding = path;
+      return await this.$axios
+        .post(`/api/landing-page/quick-add`, { path })
+        .then((res: any) => {
+          this.quickAdding = "";
+          return res;
+        })
+        .catch((err: any) => {
+          this.quickAdding = "";
+          return Promise.reject(err);
+        });
+    },
+    // کلید سریع ایندکس‌پذیری از لیست
+    async toggleIndex(id: string) {
+      this.togglingId = id;
+      return await this.$axios
+        .post(`/api/landing-page/toggle-index/${id}`)
+        .then((res: any) => {
+          this.togglingId = "";
+          return res;
+        })
+        .catch((err: any) => {
+          this.togglingId = "";
           return Promise.reject(err);
         });
     },

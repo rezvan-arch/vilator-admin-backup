@@ -26,6 +26,7 @@ export default {
         category: "other",
         priority: 1,
         anchor_variants: [],
+        exclude_urls: "",
         is_active: true,
       },
       categories: [
@@ -82,6 +83,7 @@ export default {
               category: res.data.category ?? "other",
               priority: res.data.priority ?? 1,
               anchor_variants: (res.data.anchor_variants ?? []).map((v) => v),
+              exclude_urls: (res.data.exclude_urls ?? []).join("\n"),
               is_active: res.data.is_active ?? true,
             };
           }
@@ -133,6 +135,11 @@ export default {
         anchor_variants: this.form.anchor_variants
           .map((v) => (v || "").trim())
           .filter((v) => v !== ""),
+        // هر خط textarea = یک URL استثنا (مسیر جاری == آن مسیر یا زیرمسیرش → لینک نمیشود)
+        exclude_urls: this.form.exclude_urls
+          .split(/\n+/)
+          .map((t) => t.trim())
+          .filter((t) => t !== ""),
         is_active: this.form.is_active,
       };
 
@@ -156,6 +163,7 @@ export default {
           err?.response?.data?.message ??
           err?.response?.data?.errors?.keyword?.[0] ??
           err?.response?.data?.errors?.target_url?.[0] ??
+          err?.response?.data?.errors?.["exclude_urls.0"]?.[0] ??
           "درخواست با خطا مواجه شد!";
         this.$toast(msg, "error", 2500);
       } finally {
@@ -294,6 +302,24 @@ export default {
             <p v-if="form.anchor_variants.length == 0" class="text-xs opacity-60">
               ثبت نشده — لینک همیشه با متن واقعی واژه در صفحه ساخته میشود. با وریشن، هر صفحه بهطور
               پایدار یکی از این متنها را برای لینک انتخاب میکند (تنوع طبیعی سئو).
+            </p>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="controls w-full">
+            <label>صفحات استثنا (اختیاری — هر خط یک مسیر داخلی)</label>
+            <textarea
+              v-model="form.exclude_urls"
+              dir="ltr"
+              rows="3"
+              class="w-full font-mono text-xs"
+              placeholder="/mag/guide-buy/villa-saheli&#10;/construction/renovation"
+            ></textarea>
+            <p class="text-xs opacity-60 mt-1">
+              این واژه در آن صفحهها و زیرصفحههایشان لینک نمیشود — مثلاً واژه «دفترخانه» را در
+              خودِ مقالهی دفترخانه لینک نده. مسیر والد، همهی زیرمسیرها را هم میپوشاند
+              (/construction یعنی کل بخش ساخت).
             </p>
           </div>
         </div>
