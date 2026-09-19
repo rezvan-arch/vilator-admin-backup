@@ -1,7 +1,9 @@
 <script>
 import useStore from "~~/mixins/store";
+import FormHint from "~/components/Form/Hint.vue";
 
 export default {
+  components: { FormHint },
   setup() {
     definePageMeta({ layout: "admin" });
     useHead({
@@ -272,18 +274,39 @@ export default {
                     <th>نوع تایپ</th>
                     <th>لوکیشن</th>
                     <th>تعداد ملک</th>
-                    <th title="جستجوهای واقعی کاربران در ۷ روز گذشته (از آمار سایت)">
+                    <th>
                       بازدید ۷روزه
+                      <FormHint
+                        text="چند بار کاربران واقعی سایت در ۷ روز گذشته همین جستجو را انجام دادهاند (از آمار جستجوی سایت).
+مثال: اگر «ویلا در آمل» 27 بار جستجو شده باشد، این عدد 27 است.
+عدد بالا + محتوای کم = بهترین کاندید برای نوشتن محتوای اختصاصی."
+                      />
                     </th>
-                    <th title="رویدادهای تعاملی (مشاهده ملک/تماس واتساپ) در همین لندینگ و زیرصفحههایش — ۷ روز">
+                    <th>
                       تعامل ۷روزه
+                      <FormHint
+                        text="رویدادهای واقعی کاربران داخل همین لندینگ و صفحات ملکهای زیر آن، در ۷ روز: دیدن صفحه ملک، کلیک واتساپ.
+مثال: 5 نفر از بازدیدکنندههای لندینگ روی واتساپ کارت ملک کلیک کردهاند = عدد 5."
+                      />
                     </th>
-                    <th title="تعامل تقسیم بر بازدید — کاندید محتواسازی و بهینهسازی">
+                    <th>
                       تبدیل
+                      <FormHint
+                        text="تعامل تقسیم بر بازدید (درصد). میزان جذابیت صفحه برای کاربر.
+مثال: 20 بازدید و 4 تعامل = 20٪.
+تبدیل بالا یعنی کارتها و قیمتها درستاند؛ تبدیل پایین با بازدید بالا یعنی صفحه نیاز به بهترشدن دارد (تایتل/محتوا/قیمت)."
+                      />
                     </th>
                     <th>محتوا</th>
                     <th>منبع</th>
-                    <th>ایندکس</th>
+                    <th>
+                      ایندکس
+                      <FormHint
+                        text="صفحه به گوگل معرفی میشود یا نه. با کلیک روی نشان، روشن/خاموش میشود و کشها خودکار تازه میشوند.
+خاموش کنید وقتی: صفحه کمتر از 3 ملک دارد (Tier 4) یا نمیخواهید رقابت صفحه‌ای با صفحه دیگر داشته باشید.
+مثال: لندینگ آزمایشی «ویلا در X» با 2 ملک را خاموش نگه دارید تا پر شود."
+                      />
+                    </th>
                     <th>وضعیت</th>
                     <th style="text-align: left">تنظیمات</th>
                   </tr>
@@ -515,6 +538,10 @@ export default {
                 @click="candidatesTab = 'seed'"
               >
                 نوع × مکان (seed)
+                <FormHint
+                  text="پیشنهادهای سیستم از روی دیتای ملکها: هر ترکیب «نوع ملک + شهر» که تعداد ملک کافی دارد ولی هنوز لندینگ اختصاصی ندارد.
+مثال: 86 ویلا در چمستان ولی لندینگ «ویلا در چمستان» هنوز ساخته نشده = پیشنهاد میشود."
+                />
               </button>
               <button
                 class="btn py-1 px-3 text-sm"
@@ -524,6 +551,11 @@ export default {
                 @click="candidatesTab = 'real'"
               >
                 جستجوی واقعی کاربران
+                <FormHint
+                  text="پرتکرارترین جستجوهای واقعی کاربران سایت (۳۰ روز اخیر) که هنوز لندینگ اختصاصی ندارند و الان هم نتیجه کافی دارند.
+مثال: کاربران 5 بار «ویلا استخردار» جستجو کردهاند ولی لندینگش نیست → با یک کلیک ساخته میشود.
+این لیست یعنی: مردم دنبال چی میگردند که ما صفحه مخصوصش نداریم."
+                />
                 <span
                   v-if="landingPage.realCandidates.length"
                   class="badge badge-pill badge-warning mr-1"
@@ -729,7 +761,9 @@ export default {
               </p>
             </div>
             <div class="controls mb-3">
-              <label for="formula_h1">فرمول تیتر (H1)</label>
+              <label for="formula_h1">فرمول تیتر (H1)<FormHint text="تیتر اصلی صفحه که کاربر بالای نتایج میبیند (تگ H1).
+مثال: «خرید {type} در {city} — {count} فایل فعال»
+برای «ویلا در آمل» میشود: «خرید ویلا در آمل — 275 فایل فعال»." /></label>
               <input
                 v-model="landingPage.formula.h1"
                 type="text"
@@ -739,7 +773,8 @@ export default {
               />
             </div>
             <div class="controls mb-3">
-              <label for="formula_seo_title">فرمول عنوان سئو</label>
+              <label for="formula_seo_title">فرمول عنوان سئو<FormHint text="عنوانی که در نتایج گوگل نمایش داده میشود (تگ title)؛ 50 تا 60 کاراکتر ایدهآل است.
+مثال: «{type} در {place} با قیمت و ویدیو | {brand}»." /></label>
               <input
                 v-model="landingPage.formula.seo_title"
                 type="text"
@@ -749,7 +784,8 @@ export default {
               />
             </div>
             <div class="controls mb-3">
-              <label for="formula_meta_desc">فرمول توضیحات متا</label>
+              <label for="formula_meta_desc">فرمول توضیحات متا<FormHint text="توضیح زیر عنوان در نتایج گوگل؛ 150 تا 160 کاراکتر. عدد و مزیت داشته باشد تا کلیک بخورد.
+مثال: «خرید {type} در {place} با {count} فایل فعال؛ همه با ویدیو و تور مجازی. قیمت روز و تماس مستقیم با مشاور {brand}.»" /></label>
               <textarea
                 v-model="landingPage.formula.meta_desc"
                 id="formula_meta_desc"
@@ -760,7 +796,8 @@ export default {
               ></textarea>
             </div>
             <div class="controls mb-3">
-              <label for="formula_intro">فرمول پاراگراف معرفی (intro)</label>
+              <label for="formula_intro">فرمول پاراگراف معرفی (intro)<FormHint text="پاراگراف معرفی زیر H1 صفحه؛ 2 تا 3 جمله با کلمات کلیدی طبیعی (لینکدهی واژهنامه روی آن اجرا میشود).
+مثال: «در این صفحه {count} {type} فعال در {place} میبینید؛ هر فایل با ویدیو، تور مجازی و قیمت دقیق.»" /></label>
               <textarea
                 v-model="landingPage.formula.intro"
                 id="formula_intro"
